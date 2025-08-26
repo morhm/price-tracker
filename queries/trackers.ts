@@ -91,3 +91,36 @@ export async function getTrackers({ tagNames, sort, order, limit, offset }: GetT
     total
   }
 }
+
+export async function createNewTracker(trackerData: {
+  title: string;
+  description: string;
+  userId: number;
+  targetPrice: number | null;
+  tags: { name: string }[];
+}) {
+  const { title, description, userId, targetPrice, tags } = trackerData;
+
+  const newTracker = await prisma.tracker.create({
+    data: {
+      title,
+      description,
+      userId,
+      targetPrice,
+      tags: {
+        connect: tags.map(tag => ({
+          userId_name: { userId, name: tag.name }
+        }))
+      }
+    },
+    include: {
+      tags: true,
+      listings: true,
+      _count: {
+        select: { listings: true }
+      }
+    }
+  });
+
+  return newTracker;
+}
