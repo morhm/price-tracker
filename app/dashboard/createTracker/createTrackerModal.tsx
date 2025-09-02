@@ -1,17 +1,35 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm, SubmitHandler } from 'react-hook-form';
+
+type FormInputs = {
+  title: string;
+  description: string;
+  tags: string;
+  targetPrice: string;
+}
 
 interface CreateTrackerModalProps {
   handleCloseModal: () => void;
 }
 
 export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModalProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [tags, setTags] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormInputs>({
+    defaultValues: {
+      title: '',
+      description: '',
+      tags: '',
+      targetPrice: ''
+    }
+  });
   const router = useRouter(); 
 
-  const handleCreateNewTracker = async () => {
+  const handleCreateNewTracker: SubmitHandler<FormInputs> = async (data) => {
+    const { title, description, tags, targetPrice } = data;
     try {
       const tagArray = tags.split(',').map(tag => ({ name: tag.trim() })).filter(tag => tag.name);
       
@@ -23,7 +41,7 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
         body: JSON.stringify({
           title,
           description,
-          targetPrice: null,
+          targetPrice: targetPrice ? parseFloat(targetPrice) : null,
           tags: tagArray,
         }),
       });
@@ -45,38 +63,47 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
       <h1>Create Tracker Modal</h1>
       <p>This is a placeholder for the create tracker modal.\n\n\n\n\n\n\n\n</p>
 
-      <div className="flex flex-col gap-4 mb-4 ">
-        <label className="flex flex-col text-sm font-medium text-gray-700">
-          Title
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter tracker title"
-          />
-        </label>
-        <label className="flex flex-col text-sm font-medium text-gray-700">
-          Description
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter tracker description"
-            rows={3}
-          ></textarea>
-        </label>
-        <label className="flex flex-col text-sm font-medium text-gray-700">
-            Tags
+      <form onSubmit={handleSubmit(handleCreateNewTracker)} className="mt-4">
+        <div className="flex flex-col gap-4 mb-4 ">
+          <label className="flex flex-col text-sm font-medium text-gray-700">
+            Title
             <input
+              {...register('title', { required: true }) }
               type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
               className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter tags separated by commas"
-              />
-        </label>
-      </div>
+              placeholder="Enter tracker title"
+            />
+          </label>
+          <label className="flex flex-col text-sm font-medium text-gray-700">
+            Description
+            <textarea
+              {...register('description')}
+              className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter tracker description"
+              rows={3}
+            ></textarea>
+          </label>
+          <label className="flex flex-col text-sm font-medium text-gray-700">
+              Tags
+              <input
+                {...register('tags', { })}
+                defaultValue={""}
+                className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter tags separated by commas"
+                />
+          </label>
+          <label className="flex flex-col text-sm font-medium text-gray-700">
+            Target Price
+            <input
+              {...register('targetPrice')}
+              type="number"
+              step="0.01"
+              className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter target price (optional)"
+            />
+          </label>
+        </div>
+      </form>
 
       <div className="flex justify-end space-x-2">
         <button
@@ -87,7 +114,7 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
         </button>
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
-          onClick={handleCreateNewTracker}
+          type="submit"
         >
           Create
         </button>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import CreateTrackerModal from './createTracker/createTrackerModal';
 
@@ -42,31 +43,29 @@ interface PaginationInfo {
 }
 
 export default function Dashboard() {
-  const [trackers, setTrackers] = useState<Tracker[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    total: 0,
-    limit: 10,
-    offset: 0,
-    hasMore: false
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [offset, setOffset] = useState(0);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [trackerToDelete, setTrackerToDelete] = useState<Tracker | null>(null);
+  const limit = 10;
 
-  // Fetch trackers
-  const fetchTrackers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
+  // Fetch trackers with React Query
+  const {
+    data,
+    isLoading: loading,
+    error,
+    refetch: fetchTrackers
+  } = useQuery({
+    queryKey: ['trackers', { sortBy, sortOrder, selectedTags, offset, limit }],
+    queryFn: async () => {
       const params = new URLSearchParams({
         sort: sortBy,
         order: sortOrder,
-        limit: pagination.limit.toString(),
-        offset: pagination.offset.toString(),
+        limit: limit.toString(),
+        offset: offset.toString(),
       });
 
       if (selectedTags.length > 0) {
@@ -79,38 +78,54 @@ export default function Dashboard() {
         throw new Error('Failed to fetch trackers');
       }
 
-      const data = await response.json();
-      setTrackers(data.trackers);
-      setPagination(data.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
+      return response.json();
     }
-  };
+  });
 
-  // Load initial data
-  useEffect(() => {
-    fetchTrackers();
-  }, [sortBy, sortOrder, selectedTags, pagination.offset]);
+  const trackers = data?.trackers || [];
+  const pagination = data?.pagination || { total: 0, limit, offset, hasMore: false };
 
   // Handle pagination
   const handleNextPage = () => {
     if (pagination.hasMore) {
-      setPagination(prev => ({
-        ...prev,
-        offset: prev.offset + prev.limit
-      }));
+      setOffset(prev => prev + limit);
     }
   };
 
   const handlePrevPage = () => {
-    if (pagination.offset > 0) {
-      setPagination(prev => ({
-        ...prev,
-        offset: Math.max(0, prev.offset - prev.limit)
-      }));
+    if (offset > 0) {
+      setOffset(prev => Math.max(0, prev - limit));
     }
+  };
+
+  const handleDeleteTracker = (tracker: Tracker) => {
+    setTrackerToDelete(tracker);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteTracker = async () => {
+    if (!trackerToDelete) return;
+
+    try {
+      const response = await fetch(`/api/trackers/${trackerToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setDeleteModalOpen(false);
+        setTrackerToDelete(null);
+        fetchTrackers();
+      } else {
+        console.error('Failed to delete tracker');
+      }
+    } catch (error) {
+      console.error('Error deleting tracker:', error);
+    }
+  };
+
+  const cancelDeleteTracker = () => {
+    setDeleteModalOpen(false);
+    setTrackerToDelete(null);
   };
 
   return (
@@ -180,7 +195,7 @@ export default function Dashboard() {
             </div>
 
             <button
-              onClick={fetchTrackers}
+              onClick={() => fetchTrackers()}
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
             >
               Refresh
@@ -199,9 +214,9 @@ export default function Dashboard() {
         {/* Error State */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-800">Error: {error}</p>
+            <p className="text-red-800">Error: {error.message}</p>
             <button 
-              onClick={fetchTrackers}
+              onClick={() => fetchTrackers()}
               className="mt-2 text-red-600 hover:text-red-800 text-sm underline"
             >
               Try again
@@ -212,6 +227,31 @@ export default function Dashboard() {
         {/* Modals */}
         {!loading && !error && isCreateModalOpen && (
           <CreateTrackerModal handleCloseModal={() => setIsCreateModalOpen(false)} />
+        )}
+
+        {!loading && !error && deleteModalOpen && trackerToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+              <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
+              <p className="text-gray-600 mb-4">
+                Are you sure you want to delete the tracker "{trackerToDelete.title}"? This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={cancelDeleteTracker}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteTracker}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Trackers Grid */}
@@ -229,12 +269,21 @@ export default function Dashboard() {
                 {trackers.map((tracker) => (
                   <div
                     key={tracker.id}
-                    className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6"
+                    className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6 group"
                   >
                     <div className="flex justify-between items-start mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 truncate">
                         {tracker.title}
                       </h3>
+                      <button
+                        onClick={() => handleDeleteTracker(tracker)}
+                        className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Delete Tracker"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H3a1 1 0 100 2h1v10a2 2 0 002 2h8a2 2 0 002-2V6h1a1 1 0 100-2h-2V3a1 1 0 00-1-1H6zm2 3v9a1 1 0 102 0V5a1 1 0 10-2 0zm4 0v9a1 1 0 102 0V5a1 1 0 10-2 0z" clipRule="evenodd" />
+                        </svg>
+                      </button>
                     </div>
 
                     {tracker.description && (
@@ -309,14 +358,14 @@ export default function Dashboard() {
               <div className="bg-white rounded-lg shadow p-4 mt-6">
                 <div className="flex justify-between items-center">
                   <p className="text-sm text-gray-700">
-                    Showing {pagination.offset + 1} to{' '}
-                    {Math.min(pagination.offset + pagination.limit, pagination.total)} of{' '}
+                    Showing {offset + 1} to{' '}
+                    {Math.min(offset + limit, pagination.total)} of{' '}
                     {pagination.total} results
                   </p>
                   <div className="flex space-x-2">
                     <button
                       onClick={handlePrevPage}
-                      disabled={pagination.offset === 0}
+                      disabled={offset === 0}
                       className="bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-1 rounded-md text-sm"
                     >
                       Previous

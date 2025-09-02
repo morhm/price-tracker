@@ -39,9 +39,9 @@ export async function POST(request: NextRequest, { params }: { params: { tracker
       domain,
       trackerId,
       url,
-      price: price ? parseFloat(price) : parsedPrice,
+      currentPrice: price ? parseFloat(price) : parsedPrice,
       title,
-      lastChecked: new Date()
+      lastCheckedAt: new Date()
     };
 
     const newListing = await createNewListing(newListingData); // Placeholder function

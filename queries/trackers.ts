@@ -124,3 +124,52 @@ export async function createNewTracker(trackerData: {
 
   return newTracker;
 }
+
+export async function updateTrackerById(trackerId: number, updateData: {
+  title?: string;
+  description?: string;
+  targetPrice?: number | null;
+  tags?: { name: string }[];
+}) {
+  const { title, description, targetPrice, tags } = updateData;
+
+  const existingTracker = await prisma.tracker.findUnique({
+    where: { id: trackerId },
+    include: { tags: true }
+  });
+
+  if (!existingTracker) {
+    return null;
+  }
+  
+  const userId = existingTracker.userId;
+  const currentTagNames = existingTracker.tags.map(tag => tag.name);
+  const newTagNames = tags ? tags.map(tag => tag.name) : [];
+  
+  const tagsToConnect = tags ? tags.filter(tag => !currentTagNames.includes(tag.name)) : [];
+  const tagsToDisconnect = existingTracker.tags.filter(tag => !newTagNames.includes(tag.name));
+
+  const updatedTracker = await prisma.tracker.update({
+    where: { id: trackerId },
+    data: {
+      title,
+      description,
+      targetPrice,
+      tags: {
+        connect: tagsToConnect.map(tag => ({
+          userId_name: { userId, name: tag.name }
+        })),
+        disconnect: tagsToDisconnect.map(tag => ({ id: tag.id }))
+      }
+    },
+    include: {
+      tags: true,
+      listings: true,
+      _count: {
+        select: { listings: true }
+      }
+    }
+  });
+
+  return updatedTracker;
+}

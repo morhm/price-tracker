@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const newTrackerData = {
       title: title || 'New Tracker',
       description: description || '',
-      userId: 143, // Replace with actual user ID from auth context
+      userId: 289, // Replace with actual user ID from auth context
       targetPrice: targetPrice ? parseFloat(targetPrice) : null,
       createdAt: new Date(),
       updatedAt: new Date(),
