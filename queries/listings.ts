@@ -12,7 +12,19 @@ interface NewListingData {
 
 export async function createNewListing(listingData: NewListingData) {
   const newListing = await prisma.listing.create({
-    data: listingData
+    data: {
+      ...listingData,
+      currentPrice: listingData.currentPrice ?? "",
+      title: listingData.title || 'Untitled Listing'
+    }
   });
   return newListing;
+}
+
+export async function getListingsByTrackerId(trackerId: number) {
+  const listings = await prisma.listing.findMany({
+    where: { trackerId },
+    orderBy: { lastCheckedAt: 'desc' }
+  });
+  return listings;
 }

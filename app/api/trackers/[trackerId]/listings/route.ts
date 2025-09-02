@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createNewListing } from '@/queries/listings';
+import { createNewListing, getListingsByTrackerId } from '@/queries/listings';
 import { scrapeListingData } from '@/app/utils/web-scrape';
 
 export async function GET(request: NextRequest, { params }: { params: { trackerId: string } }) {
@@ -9,8 +9,8 @@ export async function GET(request: NextRequest, { params }: { params: { trackerI
       return NextResponse.json({ error: 'Invalid tracker ID' }, { status: 400 });
     }
 
-    // Placeholder: Fetch listings for the given trackerId from the database 
-    const listings = []; // Replace with actual database call
+    const listings = await getListingsByTrackerId(trackerId);
+
     return NextResponse.json({ listings });
   } catch (error) {
     console.error('Error fetching listings:', error);
