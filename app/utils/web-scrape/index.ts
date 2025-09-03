@@ -20,7 +20,7 @@ export const scrapeListingData = async (url: string): Promise<ScrapedData> => {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    let scrapedData: ScrapedData = {
+    const scrapedData: ScrapedData = {
       title: '',
       price: null,
       isAvailable: false

@@ -1,6 +1,4 @@
-import { useParams } from "next/navigation";
-import { useState, useMemo } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 type FormInputs = {
   url: string;
@@ -16,7 +14,6 @@ export default function AddListingModal({ handleClose, handleAddListing }: AddLi
   const {
     register,
     handleSubmit,
-    formState: { errors },
   } = useForm<FormInputs>({
     defaultValues: {
       url: "",

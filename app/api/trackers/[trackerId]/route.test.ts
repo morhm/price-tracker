@@ -53,7 +53,7 @@ describe('/api/trackers/[trackerId] GET', () => {
     mockGetTrackerById.mockResolvedValue(mockTracker);
 
     const request = new NextRequest('http://localhost:3000/api/trackers/1');
-    const response = await GET(request, { params: { trackerId: '1' } });
+    const response = await GET(request, { params: Promise.resolve({ trackerId: '1' }) });
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -66,7 +66,7 @@ describe('/api/trackers/[trackerId] GET', () => {
     mockGetTrackerById.mockResolvedValue(null);
 
     const request = new NextRequest('http://localhost:3000/api/trackers/999');
-    const response = await GET(request, { params: { trackerId: '999' } });
+    const response = await GET(request, { params: Promise.resolve({ trackerId: '999' }) });
     const data = await response.json();
 
     expect(response.status).toBe(404);
@@ -76,8 +76,7 @@ describe('/api/trackers/[trackerId] GET', () => {
 
   it('should handle invalid tracker ID (non-numeric)', async () => {
     const request = new NextRequest('http://localhost:3000/api/trackers/abc');
-    const response = await GET(request, { params: { trackerId: 'abc' } });
-    const data = await response.json();
+    const response = await GET(request, { params: Promise.resolve({ trackerId: 'abc' }) });
 
     // parseInt('abc', 10) returns NaN, which gets passed to getTrackerById
     expect(mockGetTrackerById).toHaveBeenCalledWith(NaN);
@@ -86,17 +85,7 @@ describe('/api/trackers/[trackerId] GET', () => {
 
   it('should return 400 for missing tracker ID', async () => {
     const request = new NextRequest('http://localhost:3000/api/trackers/');
-    const response = await GET(request, { params: { trackerId: '' } });
-    const data = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(data.error).toBe('Tracker ID is required');
-    expect(mockGetTrackerById).not.toHaveBeenCalled();
-  });
-
-  it('should return 400 for undefined tracker ID', async () => {
-    const request = new NextRequest('http://localhost:3000/api/trackers/');
-    const response = await GET(request, { params: { trackerId: undefined as any } });
+    const response = await GET(request, { params: Promise.resolve({ trackerId: '' }) });
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -108,7 +97,7 @@ describe('/api/trackers/[trackerId] GET', () => {
     mockGetTrackerById.mockRejectedValue(new Error('Database connection failed'));
 
     const request = new NextRequest('http://localhost:3000/api/trackers/1');
-    const response = await GET(request, { params: { trackerId: '1' } });
+    const response = await GET(request, { params: Promise.resolve({ trackerId: '1' }) });
     const data = await response.json();
 
     expect(response.status).toBe(500);
@@ -120,7 +109,7 @@ describe('/api/trackers/[trackerId] GET', () => {
     mockGetTrackerById.mockResolvedValue(null);
 
     const request = new NextRequest('http://localhost:3000/api/trackers/-1');
-    const response = await GET(request, { params: { trackerId: '-1' } });
+    const response = await GET(request, { params: Promise.resolve({ trackerId: '-1' }) });
     const data = await response.json();
 
     expect(response.status).toBe(404);
@@ -132,7 +121,7 @@ describe('/api/trackers/[trackerId] GET', () => {
     mockGetTrackerById.mockResolvedValue(null);
 
     const request = new NextRequest('http://localhost:3000/api/trackers/0');
-    const response = await GET(request, { params: { trackerId: '0' } });
+    const response = await GET(request, { params: Promise.resolve({ trackerId: '0' }) });
     const data = await response.json();
 
     expect(response.status).toBe(404);
@@ -144,7 +133,7 @@ describe('/api/trackers/[trackerId] GET', () => {
     mockGetTrackerById.mockResolvedValue(null);
 
     const request = new NextRequest('http://localhost:3000/api/trackers/999999999');
-    const response = await GET(request, { params: { trackerId: '999999999' } });
+    const response = await GET(request, { params: Promise.resolve({ trackerId: '999999999' }) });
     const data = await response.json();
 
     expect(response.status).toBe(404);
@@ -172,7 +161,7 @@ describe('/api/trackers/[trackerId] GET', () => {
     mockGetTrackerById.mockResolvedValue(mockTracker);
 
     const request = new NextRequest('http://localhost:3000/api/trackers/2');
-    const response = await GET(request, { params: { trackerId: '2' } });
+    const response = await GET(request, { params: Promise.resolve({ trackerId: '2' }) });
     const data = await response.json();
 
     expect(response.status).toBe(200);

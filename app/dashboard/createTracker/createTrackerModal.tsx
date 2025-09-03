@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler } from 'react-hook-form';
 
@@ -17,7 +16,6 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
   const {
     register,
     handleSubmit,
-    formState: { errors },
   } = useForm<FormInputs>({
     defaultValues: {
       title: '',

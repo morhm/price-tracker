@@ -3,7 +3,7 @@ import { ScrapedData } from './index';
 
 export const extractFromHeuristics = ($: cheerio.Root): Partial<ScrapedData> | null => {
   try {
-    let extractedData: Partial<ScrapedData> = {};
+    const extractedData: Partial<ScrapedData> = {};
 
     // Extract title from common selectors and meta tags
     const titleSelectors = [

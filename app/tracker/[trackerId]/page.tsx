@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
 import LoadingTrackerPage from './loading';
 import AddListingModal from '../addListingModal';
 import { useQuery } from '@tanstack/react-query';
+import type { Listing, Tag } from '@/app/generated/prisma';
 
 export default function TrackerPage() {
   const params = useParams();
@@ -359,7 +359,7 @@ export default function TrackerPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Tags</h2>
             <div className="flex flex-wrap gap-2">
               {trackerData?.tags?.length > 0 ? (
-                trackerData.tags.map((tag: any) => (
+                trackerData.tags.map((tag: Tag) => (
                   <span
                     key={tag.id}
                     className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
@@ -384,7 +384,7 @@ export default function TrackerPage() {
 
           {trackerData?.listings?.length > 0 ? (
             <div className="grid gap-4">
-              {trackerData.listings.map((listing: any) => (
+              {trackerData.listings.map((listing: Listing) => (
                 <div key={listing.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -401,7 +401,7 @@ export default function TrackerPage() {
                     </div>
                     <div className="text-right ml-6">
                       <div className="text-2xl font-bold text-gray-900 mb-1">
-                        ${listing.currentPrice}
+                        ${listing.currentPrice.toString()}
                       </div>
                       <div className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${
                         listing.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'

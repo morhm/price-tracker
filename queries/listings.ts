@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import type { Listing } from '../app/generated/prisma';
 
 interface NewListingData {
     isAvailable: boolean;
@@ -10,7 +11,7 @@ interface NewListingData {
     lastCheckedAt: Date;
 }
 
-export async function createNewListing(listingData: NewListingData) {
+export async function createNewListing(listingData: NewListingData): Promise<Listing> {
   const newListing = await prisma.listing.create({
     data: {
       ...listingData,
@@ -21,7 +22,7 @@ export async function createNewListing(listingData: NewListingData) {
   return newListing;
 }
 
-export async function getListingsByTrackerId(trackerId: number) {
+export async function getListingsByTrackerId(trackerId: number): Promise<Listing[]> {
   const listings = await prisma.listing.findMany({
     where: { trackerId },
     orderBy: { lastCheckedAt: 'desc' }

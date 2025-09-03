@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTrackerById, updateTrackerById } from '@/queries/trackers';
 
-export async function GET(request: NextRequest, { params }: { params: { trackerId: string } }) {
+export async function GET(request: NextRequest, context: RouteContext<'/api/trackers/[trackerId]/listings'>) {
   try {
-    const { trackerId } = await params;
+    const { trackerId: paramTrackerId } = await context.params;
+    const trackerId = parseInt(paramTrackerId, 10);
 
-    if (!trackerId) {
+    if (trackerId === null || trackerId === undefined) {
       return new NextResponse(JSON.stringify({ error: 'Tracker ID is required' }), { status: 400 });
     }
 
     // Example: Fetch tracker data (replace with your actual logic)
-    const trackerData = await getTrackerById(parseInt(trackerId, 10))
+    const trackerData = await getTrackerById(trackerId)
 
     if (!trackerData) {
       return NextResponse.json({ error: 'Tracker not found' }, { status: 404 });
@@ -23,9 +24,10 @@ export async function GET(request: NextRequest, { params }: { params: { trackerI
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { trackerId: string } }) {
+export async function PATCH(request: NextRequest, context: RouteContext<'/api/trackers/[trackerId]/listings'>) {
   try {
-    const { trackerId } = params;
+    const { trackerId: paramTrackerId } = await context.params;
+    const trackerId = parseInt(paramTrackerId, 10);
 
     if (!trackerId) {
       return new NextResponse(JSON.stringify({ error: 'Tracker ID is required' }), { status: 400 });
@@ -37,7 +39,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { tracke
       return new NextResponse(JSON.stringify({ error: 'Request body is required' }), { status: 400 });
     }
 
-    const updatedTracker = await updateTrackerById(parseInt(trackerId, 10), body);
+    const updatedTracker = await updateTrackerById(trackerId, body);
 
     if (!updatedTracker) {
       return NextResponse.json({ error: 'Tracker not found or update failed' }, { status: 404 });

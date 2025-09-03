@@ -6,7 +6,7 @@ export const extractFromMicrodata = ($: cheerio.Root): Partial<ScrapedData> | nu
     const productScope = $('[itemscope][itemtype*="Product"]').first();
     if (productScope.length === 0) return null;
 
-    let extractedData: Partial<ScrapedData> = {};
+    const extractedData: Partial<ScrapedData> = {};
 
     // Extract title from name property
     const nameElement = productScope.find('[itemprop="name"]').first();

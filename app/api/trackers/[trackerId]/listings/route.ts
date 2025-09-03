@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createNewListing, getListingsByTrackerId } from '@/queries/listings';
 import { scrapeListingData } from '@/app/utils/web-scrape';
 
-export async function GET(request: NextRequest, { params }: { params: { trackerId: string } }) {
+export async function GET(request: NextRequest, context: RouteContext<'/api/trackers/[trackerId]/listings'>) {
   try {
-    const trackerId = parseInt(params.trackerId, 10);
+    const { trackerId: paramTrackerId } = await context.params;
+    const trackerId = parseInt(paramTrackerId, 10);
     if (isNaN(trackerId)) {
       return NextResponse.json({ error: 'Invalid tracker ID' }, { status: 400 });
     }
@@ -18,9 +19,10 @@ export async function GET(request: NextRequest, { params }: { params: { trackerI
   }
 }
 
-export async function POST(request: NextRequest, { params }: { params: { trackerId: string } }) {
+export async function POST(request: NextRequest, context: RouteContext<'/api/trackers/[trackerId]/listings'>) {
   try {
-    const trackerId = parseInt(params.trackerId, 10);
+    const { trackerId: paramTrackerId } = await context.params;
+    const trackerId = parseInt(paramTrackerId, 10);
     if (isNaN(trackerId)) {
       return NextResponse.json({ error: 'Invalid tracker ID' }, { status: 400 });
     }

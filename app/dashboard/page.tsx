@@ -42,6 +42,11 @@ interface PaginationInfo {
   hasMore: boolean;
 }
 
+interface FetchTrackersResponse {
+  trackers: Tracker[];
+  pagination: PaginationInfo;
+}
+
 export default function Dashboard() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('createdAt');
@@ -58,7 +63,7 @@ export default function Dashboard() {
     isLoading: loading,
     error,
     refetch: fetchTrackers
-  } = useQuery({
+  } = useQuery<FetchTrackersResponse>({
     queryKey: ['trackers', { sortBy, sortOrder, selectedTags, offset, limit }],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -234,7 +239,7 @@ export default function Dashboard() {
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
               <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
               <p className="text-gray-600 mb-4">
-                Are you sure you want to delete the tracker "{trackerToDelete.title}"? This action cannot be undone.
+                {"Are you sure you want to delete the tracker \"{trackerToDelete.title}\"? This action cannot be undone."}
               </p>
               <div className="flex justify-end space-x-2">
                 <button

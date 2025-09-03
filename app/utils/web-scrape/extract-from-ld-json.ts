@@ -30,7 +30,7 @@ export const extractFromLdJson = ($: cheerio.Root): Partial<ScrapedData> | null 
         for (const item of products) {
           if (item['@type'] === 'Product' || item['@type'] === 'https://schema.org/Product') {
             const product = item as ProductLdJson;
-            let extractedData: Partial<ScrapedData> = {};
+            const extractedData: Partial<ScrapedData> = {};
             
             // Extract title
             if (product.name) {
@@ -64,7 +64,7 @@ export const extractFromLdJson = ($: cheerio.Root): Partial<ScrapedData> | null 
             }
           }
         }
-      } catch (parseError) {
+      } catch {
         continue;
       }
     }
