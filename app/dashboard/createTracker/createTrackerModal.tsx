@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler } from 'react-hook-form';
+import {TagInput, useToast } from "@/components";
 
 type FormInputs = {
   title: string;
@@ -25,6 +26,7 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
     }
   });
   const router = useRouter(); 
+  const { showError } = useToast();
 
   const handleCreateNewTracker: SubmitHandler<FormInputs> = async (data) => {
     const { title, description, tags, targetPrice } = data;
@@ -50,18 +52,26 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
         handleCloseModal();
         router.push('/tracker/' + responseJson.id);
       } else {
+        showError(responseJson.message || 'Failed to create tracker');
         console.error('Failed to create tracker');
       }
     } catch (error) {
       console.error('Error creating tracker:', error);
+      showError('Network error. Please try again.');
     }
   };
+
+  const handleInvalidForm = (errors) => {
+    console.log('Form validation errors:', errors);
+    showError('Please fix the form errors before submitting.');
+  }
+
   return (
     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg">
       <h1>Create Tracker Modal</h1>
       <p>This is a placeholder for the create tracker modal.\n\n\n\n\n\n\n\n</p>
 
-      <form onSubmit={handleSubmit(handleCreateNewTracker)} className="mt-4">
+      <form onSubmit={handleSubmit(handleCreateNewTracker, handleInvalidForm)} className="mt-4">
         <div className="flex flex-col gap-4 mb-4 ">
           <label className="flex flex-col text-sm font-medium text-gray-700">
             Title
@@ -83,12 +93,21 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
           </label>
           <label className="flex flex-col text-sm font-medium text-gray-700">
               Tags
-              <input
-                {...register('tags', { })}
-                defaultValue={""}
-                className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter tags separated by commas"
-                />
+              <TagInput
+                tags={[]}
+                onChange={(newTags) => {
+                  // Manually update the form value for tags
+                  const event = {
+                    target: {
+                      name: 'tags',
+                      value: newTags.join(', '),
+                    },
+                  } as unknown as React.ChangeEvent<HTMLInputElement>;
+                  // @ts-ignore
+                  register('tags').onChange(event);
+                }}
+
+              />
           </label>
           <label className="flex flex-col text-sm font-medium text-gray-700">
             Target Price
@@ -101,22 +120,23 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
             />
           </label>
         </div>
+        
+        <div className="flex justify-end space-x-2">
+          <button
+            type="button"
+            className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md"
+            onClick={() => handleCloseModal() }
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+          >
+            Create
+          </button>
+        </div>
       </form>
-
-      <div className="flex justify-end space-x-2">
-        <button
-          className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md"
-          onClick={() => handleCloseModal() }
-        >
-          Cancel
-        </button>
-        <button
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
-          type="submit"
-        >
-          Create
-        </button>
-    </div>
     </div>
   );
 }
