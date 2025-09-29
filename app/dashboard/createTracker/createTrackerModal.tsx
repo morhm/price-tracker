@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 import {TagInput, useToast } from "@/components";
 
 type FormInputs = {
@@ -61,7 +61,7 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
     }
   };
 
-  const handleInvalidForm = (errors) => {
+  const handleInvalidForm: SubmitErrorHandler<FormInputs> = (errors) => {
     console.log('Form validation errors:', errors);
     showError('Please fix the form errors before submitting.');
   }
@@ -103,7 +103,6 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
                       value: newTags.join(', '),
                     },
                   } as unknown as React.ChangeEvent<HTMLInputElement>;
-                  // @ts-ignore
                   register('tags').onChange(event);
                 }}
 

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { scrapeListingData } from '@/app/utils/web-scrape';
 
 
-export async function Get() {
+export async function GET() {
   try {
     // fetch all trackers with their listings
     const [ trackers, totalListingsCount ] = await Promise.all([
