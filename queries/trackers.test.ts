@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaClient } from '../app/generated/prisma';
 import { getTrackers, getTrackerById } from './trackers';
+import { createMockUser, createMockTracker, createMockTag, createMockListing } from '@/app/utils/factories';
 
 // Test database setup
 const prisma = new PrismaClient({
@@ -35,30 +36,55 @@ describe('Tracker Queries', () => {
   let tracker1: any, tracker2: any, tracker3: any;
 
   describe('with test data', () => {
-    beforeEach(async () => {      
-      // Create users
+    beforeEach(async () => {
+      // Create users using factory
+      const mockUser1 = createMockUser({ email: 'user1@test.com' });
+      const mockUser2 = createMockUser({ email: 'user2@test.com' });
+
       user1 = await prisma.user.create({
-        data: { email: 'user1@test.com' }
+        data: { email: mockUser1.email }
       });
       user2 = await prisma.user.create({
-        data: { email: 'user2@test.com' }
+        data: { email: mockUser2.email }
       });
       
-      // Create tags
+      // Create tags using factory
+      const mockElectronicsTag = createMockTag({ name: 'Electronics', userId: user1.id });
+      const mockClothesTag = createMockTag({ name: 'Clothes', userId: user1.id });
+
       electronicsTag = await prisma.tag.create({
-        data: { name: 'Electronics', userId: user1.id }
+        data: { name: mockElectronicsTag.name, userId: user1.id }
       });
 
       clothesTag = await prisma.tag.create({
-        data: { name: 'Clothes', userId: user1.id }
+        data: { name: mockClothesTag.name, userId: user1.id }
       });
       
-      // Create trackers
+      // Create trackers using factory
+      const mockTracker1 = createMockTracker({
+        title: 'iPhone Tracker',
+        description: 'Track iPhone prices',
+        targetPrice: 999,
+        userId: user1.id
+      });
+      const mockTracker2 = createMockTracker({
+        title: 'T-Shirt Tracker',
+        description: 'Track T-Shirt prices',
+        targetPrice: 19.99,
+        userId: user1.id
+      });
+      const mockTracker3 = createMockTracker({
+        title: 'Generic Tracker',
+        description: 'No tags tracker',
+        targetPrice: 50,
+        userId: user2.id
+      });
+
       tracker1 = await prisma.tracker.create({
         data: {
-          title: 'iPhone Tracker',
-          description: 'Track iPhone prices',
-          targetPrice: 999,
+          title: mockTracker1.title,
+          description: mockTracker1.description,
+          targetPrice: mockTracker1.targetPrice,
           userId: user1.id,
           tags: { connect: [{ id: electronicsTag.id }] }
         }
@@ -66,9 +92,9 @@ describe('Tracker Queries', () => {
 
       tracker2 = await prisma.tracker.create({
         data: {
-          title: 'T-Shirt Tracker',
-          description: 'Track T-Shirt prices',
-          targetPrice: 19.99,
+          title: mockTracker2.title,
+          description: mockTracker2.description,
+          targetPrice: mockTracker2.targetPrice,
           userId: user1.id,
           tags: { connect: [{ id: clothesTag.id }] }
         }
@@ -76,22 +102,39 @@ describe('Tracker Queries', () => {
 
       tracker3 = await prisma.tracker.create({
         data: {
-          title: 'Generic Tracker',
-          description: 'No tags tracker',
-          targetPrice: 50,
+          title: mockTracker3.title,
+          description: mockTracker3.description,
+          targetPrice: mockTracker3.targetPrice,
           userId: user2.id,
           tags: {}
         }
       });
       
-      // Create listings
+      // Create listings using factory
+      const mockListing1 = createMockListing({
+        title: 'iPhone 15 Pro',
+        url: 'https://apple.com/iphone',
+        domain: 'apple.com',
+        currentPrice: 1099,
+        isAvailable: true,
+        trackerId: tracker1.id
+      });
+      const mockListing2 = createMockListing({
+        title: 'Cool T-Shirt',
+        url: 'https://example.com/tshirt',
+        domain: 'example.com',
+        currentPrice: 25.99,
+        isAvailable: true,
+        trackerId: tracker2.id
+      });
+
       await prisma.listing.create({
         data: {
-          title: 'iPhone 15 Pro',
-          url: 'https://apple.com/iphone',
-          domain: 'apple.com',
-          currentPrice: 1099,
-          isAvailable: true,
+          title: mockListing1.title,
+          url: mockListing1.url,
+          domain: mockListing1.domain,
+          currentPrice: mockListing1.currentPrice,
+          isAvailable: mockListing1.isAvailable,
           lastCheckedAt: new Date(),
           trackerId: tracker1.id
         }
@@ -99,11 +142,11 @@ describe('Tracker Queries', () => {
 
       await prisma.listing.create({
         data: {
-          title: 'Cool T-Shirt',
-          url: 'https://example.com/tshirt',
-          domain: 'example.com',
-          currentPrice: 25.99,
-          isAvailable: true,
+          title: mockListing2.title,
+          url: mockListing2.url,
+          domain: mockListing2.domain,
+          currentPrice: mockListing2.currentPrice,
+          isAvailable: mockListing2.isAvailable,
           lastCheckedAt: new Date(),
           trackerId: tracker2.id
         }

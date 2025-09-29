@@ -6,7 +6,7 @@ export async function GET(request: NextRequest, context: RouteContext<'/api/trac
     const { trackerId: paramTrackerId } = await context.params;
     const trackerId = parseInt(paramTrackerId, 10);
 
-    if (trackerId === null || trackerId === undefined) {
+    if (trackerId !== 0 && !trackerId) {
       return new NextResponse(JSON.stringify({ error: 'Tracker ID is required' }), { status: 400 });
     }
 
@@ -29,7 +29,7 @@ export async function PATCH(request: NextRequest, context: RouteContext<'/api/tr
     const { trackerId: paramTrackerId } = await context.params;
     const trackerId = parseInt(paramTrackerId, 10);
 
-    if (!trackerId) {
+    if (trackerId !== 0 && !trackerId) {
       return new NextResponse(JSON.stringify({ error: 'Tracker ID is required' }), { status: 400 });
     }
 

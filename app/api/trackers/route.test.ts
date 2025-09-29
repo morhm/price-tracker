@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { Decimal } from '@prisma/client/runtime/library';
 import { Prisma  } from '@/app/generated/prisma';
+import { GET } from './route';
+import { createMockTracker, createMockUser, createMockTrackers } from '@/app/utils/factories';
 
 type TrackerDetails = Prisma.TrackerGetPayload<{
   include: {
@@ -28,8 +29,6 @@ vi.mock('@/queries/trackers', () => ({
   getTrackers: vi.fn(),
 }));
 
-// Import after mock is set up
-const { GET } = await import('./route');
 const { getTrackers } = await import('@/queries/trackers');
 
 const mockedGetTrackers = vi.mocked(getTrackers);
@@ -40,16 +39,24 @@ describe('/api/trackers GET', () => {
   });
 
   it('should return trackers with default pagination', async () => {
+    const mockUser = createMockUser({
+      id: 1,
+      email: 'test@example.com',
+      createdAt: '2025-08-11T08:03:31.765Z',
+      updatedAt: '2025-08-11T08:03:31.765Z'
+    });
     const mockTrackers = [
       {
-        id: 1,
-        title: 'Test Tracker',
-        description: 'Test Description',
-        targetPrice: new Decimal('99.99'),
-        createdAt: new Date('2025-08-11T08:03:31.765Z'),
-        updatedAt: new Date('2025-08-11T08:03:31.765Z'),
-        user: { id: 1, email: 'test@example.com' },
-        userId: 1,
+        ...createMockTracker({
+          id: 1,
+          title: 'Test Tracker',
+          description: 'Test Description',
+          targetPrice: '99.99',
+          userId: 1,
+          createdAt: '2025-08-11T08:03:31.765Z',
+          updatedAt: '2025-08-11T08:03:31.765Z'
+        }),
+        user: mockUser,
         tags: [],
         listings: [],
         _count: { listings: 0 }
@@ -112,14 +119,20 @@ describe('/api/trackers GET', () => {
   });
 
   it('should calculate hasMore correctly', async () => {
-    const mockTrackers = new Array(5).fill({
+    const mockUser = createMockUser({
       id: 1,
-      title: 'Test Tracker',
-      user: { id: 1, email: 'test@example.com' },
+      email: 'test@example.com',
+      createdAt: '2025-08-11T08:03:31.765Z',
+      updatedAt: '2025-08-11T08:03:31.765Z'
+    });
+    const baseTrackers = createMockTrackers(5, { id: 1, title: 'Test Tracker', userId: 1 });
+    const mockTrackers: TrackerDetails[] = baseTrackers.map(tracker => ({
+      ...tracker,
+      user: mockUser,
       tags: [],
       listings: [],
       _count: { listings: 0 }
-    });
+    }));
     const mockTotal = 20; // Total items in database
 
     mockedGetTrackers.mockResolvedValue({ trackers: mockTrackers, total: mockTotal });

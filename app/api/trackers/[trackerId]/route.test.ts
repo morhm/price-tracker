@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
+import { createMockTracker, createMockUser, createMockTag, createMockListing } from '@/app/utils/factories';
 
 // Mock the getTrackerById function
 const mockGetTrackerById = vi.fn();
@@ -17,37 +18,41 @@ describe('/api/trackers/[trackerId] GET', () => {
   });
 
   it('should return tracker data for valid ID', async () => {
-    const mockTracker = {
+    const mockUser = createMockUser({
       id: 1,
-      title: 'iPhone Tracker',
-      description: 'Track iPhone prices',
-      targetPrice: '999',
-      userId: 1,
+      email: 'user@example.com',
       createdAt: '2025-08-11T08:03:31.765Z',
-      updatedAt: '2025-08-11T08:03:31.765Z',
-      user: {
+      updatedAt: '2025-08-11T08:03:31.765Z'
+    });
+    const mockTag = createMockTag({
+      id: 1,
+      name: 'Electronics',
+      userId: 1,
+      createdAt: '2025-08-11T08:03:31.765Z'
+    });
+    const mockListing = createMockListing({
+      id: 1,
+      title: 'iPhone 15 Pro',
+      url: 'https://apple.com/iphone',
+      domain: 'apple.com',
+      currentPrice: '1099',
+      isAvailable: true,
+      lastCheckedAt: '2025-08-11T08:03:31.765Z',
+      createdAt: '2025-08-11T08:03:31.765Z'
+    });
+    const mockTracker = {
+      ...createMockTracker({
         id: 1,
-        email: 'user@example.com'
-      },
-      tags: [
-        {
-          id: 1,
-          name: 'Electronics',
-          userId: 1,
-          createdAt: '2025-08-11T08:03:31.765Z'
-        }
-      ],
-      listings: [
-        {
-          id: 1,
-          title: 'iPhone 15 Pro',
-          url: 'https://apple.com/iphone',
-          domain: 'apple.com',
-          currentPrice: '1099',
-          isAvailable: true,
-          lastCheckedAt: '2025-08-11T08:03:31.765Z'
-        }
-      ]
+        title: 'iPhone Tracker',
+        description: 'Track iPhone prices',
+        targetPrice: '999',
+        userId: 1,
+        createdAt: '2025-08-11T08:03:31.765Z',
+        updatedAt: '2025-08-11T08:03:31.765Z'
+      }),
+      user: mockUser,
+      tags: [mockTag],
+      listings: [mockListing]
     };
 
     mockGetTrackerById.mockResolvedValue(mockTracker);
@@ -78,9 +83,9 @@ describe('/api/trackers/[trackerId] GET', () => {
     const request = new NextRequest('http://localhost:3000/api/trackers/abc');
     const response = await GET(request, { params: Promise.resolve({ trackerId: 'abc' }) });
 
-    // parseInt('abc', 10) returns NaN, which gets passed to getTrackerById
-    expect(mockGetTrackerById).toHaveBeenCalledWith(NaN);
-    expect(response.status).toBe(404); // Assuming getTrackerById returns null for NaN
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.error).toBe('Tracker ID is required');
   });
 
   it('should return 400 for missing tracker ID', async () => {
@@ -142,18 +147,23 @@ describe('/api/trackers/[trackerId] GET', () => {
   });
 
   it('should return tracker with no tags or listings', async () => {
-    const mockTracker = {
-      id: 2,
-      title: 'Simple Tracker',
-      description: 'Basic tracker',
-      targetPrice: '50',
-      userId: 1,
+    const mockUser = createMockUser({
+      id: 1,
+      email: 'user@example.com',
       createdAt: '2025-08-11T08:03:31.765Z',
-      updatedAt: '2025-08-11T08:03:31.765Z',
-      user: {
-        id: 1,
-        email: 'user@example.com'
-      },
+      updatedAt: '2025-08-11T08:03:31.765Z'
+    });
+    const mockTracker = {
+      ...createMockTracker({
+        id: 2,
+        title: 'Simple Tracker',
+        description: 'Basic tracker',
+        targetPrice: '50',
+        userId: 1,
+        createdAt: '2025-08-11T08:03:31.765Z',
+        updatedAt: '2025-08-11T08:03:31.765Z'
+      }),
+      user: mockUser,
       tags: [],
       listings: []
     };
