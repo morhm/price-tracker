@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import CreateTrackerModal from './createTracker/createTrackerModal';
+import { useSession } from 'next-auth/react';
 
 // Types
 interface Tracker {
@@ -55,6 +56,7 @@ export default function Dashboard() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [trackerToDelete, setTrackerToDelete] = useState<Tracker | null>(null);
+  const { data: session, status } = useSession();
   const limit = 10;
 
   // Fetch trackers with React Query
@@ -133,6 +135,22 @@ export default function Dashboard() {
     setTrackerToDelete(null);
   };
 
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"/>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">You must be logged in to view this page.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -153,6 +171,7 @@ export default function Dashboard() {
                 onClick={() => setIsCreateModalOpen(true)}
               >
                 Add Tracker
+                {session.user?.name}
               </button>
             </div>
           </div>

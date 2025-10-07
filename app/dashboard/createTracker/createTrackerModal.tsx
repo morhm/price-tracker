@@ -1,23 +1,26 @@
 import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
-import {TagInput, useToast } from "@/components";
+import { TagInput, useToast } from "@/components";
 
-type FormInputs = {
+type FormData = {
   title: string;
-  description: string;
-  tags: string;
-  targetPrice: string;
-}
+  description?: string;
+  tags?: string;
+  targetPrice?: string;
+};
 
 interface CreateTrackerModalProps {
   handleCloseModal: () => void;
 }
 
-export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModalProps) {
+export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerModalProps) {
   const {
     register,
     handleSubmit,
-  } = useForm<FormInputs>({
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FormData>({
     defaultValues: {
       title: '',
       description: '',
@@ -25,14 +28,17 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
       targetPrice: ''
     }
   });
-  const router = useRouter(); 
+  const router = useRouter();
   const { showError } = useToast();
 
-  const handleCreateNewTracker: SubmitHandler<FormInputs> = async (data) => {
+  const tagsValue = watch('tags') || '';
+  const tagsArray = tagsValue ? tagsValue.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+  const handleCreateNewTracker: SubmitHandler<FormData> = async (data) => {
     const { title, description, tags, targetPrice } = data;
     try {
-      const tagArray = tags.split(',').map(tag => ({ name: tag.trim() })).filter(tag => tag.name);
-      
+      const tagArray = tags ? tags.split(',').map(tag => ({ name: tag.trim() })).filter(tag => tag.name) : [];
+
       const response = await fetch('/api/trackers', {
         method: 'POST',
         headers: {
@@ -61,7 +67,7 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
     }
   };
 
-  const handleInvalidForm: SubmitErrorHandler<FormInputs> = (errors) => {
+  const handleInvalidForm: SubmitErrorHandler<FormData> = (errors) => {
     console.log('Form validation errors:', errors);
     showError('Please fix the form errors before submitting.');
   }
@@ -73,58 +79,69 @@ export default function CreateTrackerModal({handleCloseModal}: CreateTrackerModa
 
       <form onSubmit={handleSubmit(handleCreateNewTracker, handleInvalidForm)} className="mt-4">
         <div className="flex flex-col gap-4 mb-4 ">
-          <label className="flex flex-col text-sm font-medium text-gray-700">
-            Title
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700">
+              Title
+            </label>
             <input
-              {...register('title', { required: true }) }
+              {...register('title', {
+                required: 'Title is required',
+                minLength: { value: 1, message: 'Title is required' }
+              })}
               type="text"
               className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter tracker title"
             />
-          </label>
-          <label className="flex flex-col text-sm font-medium text-gray-700">
-            Description
+            {errors.title && <span className="text-red-500 text-sm mt-1">{errors.title.message}</span>}
+          </div>
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700">
+              Description
+            </label>
             <textarea
               {...register('description')}
               className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter tracker description"
               rows={3}
             ></textarea>
-          </label>
-          <label className="flex flex-col text-sm font-medium text-gray-700">
+          </div>
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700">
               Tags
-              <TagInput
-                tags={[]}
-                onChange={(newTags) => {
-                  // Manually update the form value for tags
-                  const event = {
-                    target: {
-                      name: 'tags',
-                      value: newTags.join(', '),
-                    },
-                  } as unknown as React.ChangeEvent<HTMLInputElement>;
-                  register('tags').onChange(event);
-                }}
-
-              />
-          </label>
-          <label className="flex flex-col text-sm font-medium text-gray-700">
-            Target Price
+            </label>
+            <TagInput
+              tags={tagsArray}
+              onChange={(newTags) => {
+                setValue('tags', newTags.join(','));
+              }}
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700">
+              Target Price
+            </label>
             <input
-              {...register('targetPrice')}
+              {...register('targetPrice', {
+                validate: (value) => {
+                  if (!value || value === '') return true;
+                  const num = Number(value);
+                  return (!isNaN(num) && num > 0) || 'Target price must be a valid positive number';
+                }
+              })}
               type="number"
               step="0.01"
               className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter target price (optional)"
             />
-          </label>
+            {errors.targetPrice && <span className="text-red-500 text-sm mt-1">{errors.targetPrice.message}</span>}
+          </div>
         </div>
-        
+
         <div className="flex justify-end space-x-2">
           <button
             type="button"
             className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md"
-            onClick={() => handleCloseModal() }
+            onClick={() => handleCloseModal()}
           >
             Cancel
           </button>
