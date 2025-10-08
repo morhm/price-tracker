@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import CreateTrackerModal from './createTracker/createTrackerModal';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 
 // Types
 interface Tracker {
@@ -165,15 +165,12 @@ export default function Dashboard() {
                 Manage and monitor your price trackers
               </p>
             </div>
-            <div className="flex space-x-3">
-              <button
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                onClick={() => setIsCreateModalOpen(true)}
-              >
-                Add Tracker
-                {session.user?.name}
-              </button>
-            </div>
+            <button
+              onClick={() => signOut()}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </header>
@@ -275,6 +272,18 @@ export default function Dashboard() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Add Tracker Button */}
+        {!loading && !error && (
+          <div className="mb-6">
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              Add Tracker
+            </button>
           </div>
         )}
 
