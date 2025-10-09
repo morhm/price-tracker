@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-
+import { getServerSession } from 'next-auth';
 import { getTrackers, createNewTracker } from '@/queries/trackers';
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession();
+
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
-    
+
     const sort = searchParams.get('sort') || 'createdAt';
     const order = (searchParams.get('order') as 'asc' | 'desc') || 'desc';
     const tags = searchParams.get('tags');
@@ -40,10 +46,18 @@ export async function POST(request: NextRequest) {
     } = await request.json();
     // Implement logic to create a new tracker using the request body
 
+    const session = await getServerSession();
+
+    if (!session) {
+      return new Response("Unauthorized", { status: 401 })
+    }
+
+    const userId = parseInt(session.user.id, 10)
+
     const newTrackerData = {
       title: title || 'New Tracker',
       description: description || '',
-      userId: 441, // Replace with actual user ID from auth context
+      userId: userId,
       targetPrice: targetPrice ? parseFloat(targetPrice) : null,
       createdAt: new Date(),
       updatedAt: new Date(),

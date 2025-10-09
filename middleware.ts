@@ -9,8 +9,9 @@ export default withAuth({
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",   // protect all routes under /dashboard
-    "/api/:path*",
+    "/dashboard/:path*",
+    "/api/trackers/:path*",
     "/tracker/:path*",
+    // Don't protect /api/auth/* - NextAuth needs these public
   ],
 };
