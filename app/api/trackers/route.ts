@@ -17,9 +17,10 @@ export async function GET(request: NextRequest) {
     const tags = searchParams.get('tags');
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = parseInt(searchParams.get('offset') || '0');
+    const isArchived = searchParams.get('archived') === 'true';
     const tagNames = tags ? tags.split(',').map(tag => tag.trim()) : [];
 
-    const { trackers, total } = await getTrackers({ tagNames, sort, order, limit, offset });
+    const { trackers, total } = await getTrackers({ tagNames, sort, order, limit, offset, isArchived });
 
     return NextResponse.json({
       trackers,

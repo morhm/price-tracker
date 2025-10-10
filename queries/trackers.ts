@@ -33,10 +33,14 @@ type GetTrackersParams = {
   order: 'asc' | 'desc';
   limit: number;
   offset: number;
+  isArchived?: boolean;
 };
 
-export async function getTrackers({ tagNames, sort, order, limit, offset }: GetTrackersParams) {
-  const where: any = {};
+export async function getTrackers({ tagNames, sort, order, limit, offset, isArchived = false }: GetTrackersParams) {
+  const where: any = {
+    isArchived
+  };
+
   if (tagNames.length > 0) {
     where.tags = {
       some: {
@@ -129,9 +133,10 @@ export async function updateTrackerById(trackerId: number, updateData: {
   title?: string;
   description?: string;
   targetPrice?: number | null;
+  isArchived?: boolean;
   tags?: { name: string }[];
 }) {
-  const { title, description, targetPrice, tags } = updateData;
+  const { title, description, targetPrice, isArchived, tags } = updateData;
 
   const existingTracker = await prisma.tracker.findUnique({
     where: { id: trackerId },
@@ -155,6 +160,7 @@ export async function updateTrackerById(trackerId: number, updateData: {
       title,
       description,
       targetPrice,
+      isArchived,
       tags: {
         connect: tagsToConnect.map(tag => ({
           userId_name: { userId, name: tag.name }

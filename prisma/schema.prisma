@@ -53,6 +53,7 @@ model Tracker {
   title       String
   description String?
   targetPrice Decimal?
+  isArchived  Boolean   @default(false)
   tags        Tag[]
   listings    Listing[]
   createdAt   DateTime  @default(now())

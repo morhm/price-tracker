@@ -50,12 +50,14 @@ interface FetchTrackersResponse {
 
 export default function Dashboard() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState('createdAt');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const sortBy = 'createdAt';
+  const sortOrder = 'desc' as const;
   const [offset, setOffset] = useState(0);
+  const [showArchived, setShowArchived] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [trackerToDelete, setTrackerToDelete] = useState<Tracker | null>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const { data: session, status } = useSession();
   const limit = 10;
 
@@ -66,13 +68,14 @@ export default function Dashboard() {
     error,
     refetch: fetchTrackers
   } = useQuery<FetchTrackersResponse>({
-    queryKey: ['trackers', { sortBy, sortOrder, selectedTags, offset, limit }],
+    queryKey: ['trackers', { sortBy, sortOrder, selectedTags, offset, limit, showArchived }],
     queryFn: async () => {
       const params = new URLSearchParams({
         sort: sortBy,
         order: sortOrder,
         limit: limit.toString(),
         offset: offset.toString(),
+        archived: showArchived.toString(),
       });
 
       if (selectedTags.length > 0) {
@@ -80,7 +83,7 @@ export default function Dashboard() {
       }
 
       const response = await fetch(`/api/trackers?${params}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch trackers');
       }
@@ -108,6 +111,28 @@ export default function Dashboard() {
   const handleDeleteTracker = (tracker: Tracker) => {
     setTrackerToDelete(tracker);
     setDeleteModalOpen(true);
+    setOpenDropdownId(null);
+  };
+
+  const handleArchiveTracker = async (tracker: Tracker) => {
+    try {
+      const response = await fetch(`/api/trackers/${tracker.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isArchived: true }),
+      });
+
+      if (response.ok) {
+        fetchTrackers();
+        setOpenDropdownId(null);
+      } else {
+        console.error('Failed to archive tracker');
+      }
+    } catch (error) {
+      console.error('Error archiving tracker:', error);
+    }
   };
 
   const confirmDeleteTracker = async () => {
@@ -152,7 +177,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors ${showArchived ? 'bg-gray-200' : 'bg-gray-50'}`}>
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -178,48 +203,39 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Filters and Controls */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex flex-wrap gap-4 items-center">
-            {/* Sort Controls */}
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Sort by:</label>
-              <select 
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-1 text-sm"
-              >
-                <option value="createdAt">Date Created</option>
-                <option value="title">Title</option>
-                <option value="updatedAt">Last Updated</option>
-              </select>
-              <select 
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                className="border border-gray-300 rounded-md px-3 py-1 text-sm"
-              >
-                <option value="desc">Descending</option>
-                <option value="asc">Ascending</option>
-              </select>
-            </div>
+          <div className="flex flex-wrap gap-4 items-center justify-between">
+            <div className="flex flex-wrap gap-4 items-center">
+              {/* Tag Filter */}
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">Tags:</label>
+                <input
+                  type="text"
+                  placeholder="Filter by tags (comma-separated)"
+                  className="border border-gray-300 rounded-md px-3 py-1 text-sm"
+                  onChange={(e) => {
+                    const tags = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
+                    setSelectedTags(tags);
+                  }}
+                />
+              </div>
 
-            {/* Tag Filter */}
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Tags:</label>
-              <input
-                type="text"
-                placeholder="Filter by tags (comma-separated)"
-                className="border border-gray-300 rounded-md px-3 py-1 text-sm"
-                onChange={(e) => {
-                  const tags = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
-                  setSelectedTags(tags);
-                }}
-              />
+              <button
+                onClick={() => fetchTrackers()}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Refresh
+              </button>
             </div>
 
             <button
-              onClick={() => fetchTrackers()}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              onClick={() => setShowArchived(!showArchived)}
+              className={`${
+                showArchived
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              } px-4 py-2 rounded-md text-sm font-medium`}
             >
-              Refresh
+              {showArchived ? 'Show Active' : 'Show Archived'}
             </button>
           </div>
         </div>
@@ -302,21 +318,43 @@ export default function Dashboard() {
                 {trackers.map((tracker) => (
                   <div
                     key={tracker.id}
-                    className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6 group"
+                    className={`rounded-lg shadow hover:shadow-md transition-all p-6 group ${
+                      showArchived ? 'bg-gray-100 border border-gray-300' : 'bg-white'
+                    }`}
                   >
                     <div className="flex justify-between items-start mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 truncate">
                         {tracker.title}
                       </h3>
-                      <button
-                        onClick={() => handleDeleteTracker(tracker)}
-                        className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Delete Tracker"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H3a1 1 0 100 2h1v10a2 2 0 002 2h8a2 2 0 002-2V6h1a1 1 0 100-2h-2V3a1 1 0 00-1-1H6zm2 3v9a1 1 0 102 0V5a1 1 0 10-2 0zm4 0v9a1 1 0 102 0V5a1 1 0 10-2 0z" clipRule="evenodd" />
-                        </svg>
-                      </button>
+                      <div className="relative">
+                        <button
+                          onClick={() => setOpenDropdownId(openDropdownId === tracker.id ? null : tracker.id)}
+                          className="text-gray-500 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Options"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                          </svg>
+                        </button>
+                        {openDropdownId === tracker.id && (
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                            <div className="py-1">
+                              <button
+                                onClick={() => handleArchiveTracker(tracker)}
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                Archive
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTracker(tracker)}
+                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {tracker.description && (
