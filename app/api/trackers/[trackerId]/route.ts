@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { getTrackerById, updateTrackerById } from '@/queries/trackers';
+import { authOptions } from '../../auth/[...nextauth]/route';
+import { ensureTagsExist } from '@/lib/tagHelpers';
 
 export async function GET(request: NextRequest, context: RouteContext<'/api/trackers/[trackerId]/listings'>) {
   try {
@@ -33,10 +36,22 @@ export async function PATCH(request: NextRequest, context: RouteContext<'/api/tr
       return new NextResponse(JSON.stringify({ error: 'Tracker ID is required' }), { status: 400 });
     }
 
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
 
     if (!body || Object.keys(body).length === 0) {
       return new NextResponse(JSON.stringify({ error: 'Request body is required' }), { status: 400 });
+    }
+
+    // If tags are being updated, ensure they exist
+    if (body.tags) {
+      const userId = parseInt(session.user.id, 10);
+      await ensureTagsExist(userId, body.tags);
     }
 
     const updatedTracker = await updateTrackerById(trackerId, body);

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getTrackers, createNewTracker } from '@/queries/trackers';
+import { authOptions } from '../auth/[...nextauth]/route';
+import { ensureTagsExist } from '@/lib/tagHelpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
 
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -45,15 +47,18 @@ export async function POST(request: NextRequest) {
       targetPrice,
       tags
     } = await request.json();
-    // Implement logic to create a new tracker using the request body
 
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
 
     if (!session) {
       return new Response("Unauthorized", { status: 401 })
     }
 
-    const userId = parseInt(session.user.id, 10)
+    const userId = parseInt(session.user.id, 10);
+    const requestedTags = tags || [];
+
+    // Ensure all requested tags exist
+    await ensureTagsExist(userId, requestedTags);
 
     const newTrackerData = {
       title: title || 'New Tracker',
@@ -62,12 +67,12 @@ export async function POST(request: NextRequest) {
       targetPrice: targetPrice ? parseFloat(targetPrice) : null,
       createdAt: new Date(),
       updatedAt: new Date(),
-      tags: tags || [],
+      tags: requestedTags,
       listings: [],
       _count: { listings: 0 }
     };
 
-    const newTracker = await createNewTracker(newTrackerData); // Placeholder function
+    const newTracker = await createNewTracker(newTrackerData);
 
     return NextResponse.json(newTracker, { status: 201 });
   } catch (error) {

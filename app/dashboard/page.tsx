@@ -50,6 +50,8 @@ interface FetchTrackersResponse {
 
 export default function Dashboard() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
   const sortBy = 'createdAt';
   const sortOrder = 'desc' as const;
   const [offset, setOffset] = useState(0);
@@ -94,6 +96,23 @@ export default function Dashboard() {
 
   const trackers = data?.trackers || [];
   const pagination = data?.pagination || { total: 0, limit, offset, hasMore: false };
+
+  // Fetch tags
+  const { data: tagsData } = useQuery({
+    queryKey: ['tags'],
+    queryFn: async () => {
+      const response = await fetch('/api/tags');
+      if (!response.ok) {
+        throw new Error('Failed to fetch tags');
+      }
+      return response.json();
+    }
+  });
+
+  const allTags = tagsData?.tags || [];
+  const filteredTags = allTags.filter((tag: { name: string }) =>
+    tag.name.toLowerCase().includes(tagInput.toLowerCase())
+  ).slice(0, 20);
 
   // Handle pagination
   const handleNextPage = () => {
@@ -206,17 +225,61 @@ export default function Dashboard() {
           <div className="flex flex-wrap gap-4 items-center justify-between">
             <div className="flex flex-wrap gap-4 items-center">
               {/* Tag Filter */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 relative">
                 <label className="text-sm font-medium text-gray-700">Tags:</label>
-                <input
-                  type="text"
-                  placeholder="Filter by tags (comma-separated)"
-                  className="border border-gray-300 rounded-md px-3 py-1 text-sm"
-                  onChange={(e) => {
-                    const tags = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
-                    setSelectedTags(tags);
-                  }}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search tags..."
+                    value={tagInput}
+                    className="border border-gray-300 rounded-md px-3 py-1 text-sm w-64"
+                    onChange={(e) => {
+                      setTagInput(e.target.value);
+                      setShowTagDropdown(true);
+                    }}
+                    onFocus={() => setShowTagDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowTagDropdown(false), 200)}
+                  />
+                  {showTagDropdown && filteredTags.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {filteredTags.map((tag: { id: number; name: string }) => (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
+                          onClick={() => {
+                            if (!selectedTags.includes(tag.name)) {
+                              setSelectedTags([...selectedTags, tag.name]);
+                            }
+                            setTagInput('');
+                            setShowTagDropdown(false);
+                          }}
+                        >
+                          {tag.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {selectedTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          className="ml-1 text-blue-600 hover:text-blue-800"
+                          onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <button

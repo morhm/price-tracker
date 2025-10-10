@@ -6,6 +6,7 @@ import LoadingTrackerPage from './loading';
 import AddListingModal from '../addListingModal';
 import { useQuery } from '@tanstack/react-query';
 import type { Listing, Tag } from '@/app/generated/prisma';
+import { TagInput } from '@/components';
 
 export default function TrackerPage() {
   const params = useParams();
@@ -18,6 +19,8 @@ export default function TrackerPage() {
   const [editedTitle, setEditedTitle] = useState<string>('');
   const [isEditingTargetPrice, setIsEditingTargetPrice] = useState<boolean>(false);
   const [editedTargetPrice, setEditedTargetPrice] = useState<string>('');
+  const [isEditingTags, setIsEditingTags] = useState<boolean>(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const {
     data: trackerData,
@@ -47,6 +50,7 @@ export default function TrackerPage() {
     },
     enabled: !!trackerId,
   });
+
 
   const handleAddListing = async (data: { url: string; title: string }) => {
     try {
@@ -164,6 +168,39 @@ export default function TrackerPage() {
   const handleCancelEditTargetPrice = () => {
     setIsEditingTargetPrice(false);
     setEditedTargetPrice('');
+  };
+
+  const handleEditTags = () => {
+    setSelectedTags(trackerData?.tags?.map((tag: Tag) => tag.name) || []);
+    setIsEditingTags(true);
+  };
+
+  const handleSaveTags = async () => {
+    try {
+      const tags = selectedTags.map(name => ({ name }));
+      const response = await fetch(`/api/trackers/${trackerId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tags }),
+      });
+
+      if (response.ok) {
+        setIsEditingTags(false);
+        setSelectedTags([]);
+        refetchTracker();
+      } else {
+        console.error('Failed to update tags');
+      }
+    } catch (error) {
+      console.error('Error updating tags:', error);
+    }
+  };
+
+  const handleCancelEditTags = () => {
+    setIsEditingTags(false);
+    setSelectedTags([]);
   };
 
   if (loading) {
@@ -356,21 +393,57 @@ export default function TrackerPage() {
 
           {/* Tags Section */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Tags</h2>
-            <div className="flex flex-wrap gap-2">
-              {trackerData?.tags?.length > 0 ? (
-                trackerData.tags.map((tag: Tag) => (
-                  <span
-                    key={tag.id}
-                    className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                  >
-                    {tag.name}
-                  </span>
-                ))
-              ) : (
-                <p className="text-gray-500 italic">No tags assigned</p>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Tags</h2>
+              {!isEditingTags && (
+                <button
+                  onClick={handleEditTags}
+                  className="text-gray-500 hover:text-gray-700 p-1"
+                  title="Edit tags"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
               )}
             </div>
+            {isEditingTags ? (
+              <div className="space-y-3">
+                <TagInput
+                  tags={selectedTags}
+                  onChange={(newTags) => setSelectedTags(newTags)}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveTags}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={handleCancelEditTags}
+                    className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {trackerData?.tags?.length > 0 ? (
+                  trackerData.tags.map((tag: Tag) => (
+                    <span
+                      key={tag.id}
+                      className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                    >
+                      {tag.name}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic">No tags assigned</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
