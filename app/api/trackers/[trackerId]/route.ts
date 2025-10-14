@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getTrackerById, updateTrackerById } from '@/queries/trackers';
 import { authOptions } from '../../auth/[...nextauth]/route';
-import { ensureTagsExist } from '@/lib/tagHelpers';
+import { ensureTagsExist } from '@/queries/tags';
 
 export async function GET(request: NextRequest, context: RouteContext<'/api/trackers/[trackerId]/listings'>) {
   try {
@@ -13,7 +13,12 @@ export async function GET(request: NextRequest, context: RouteContext<'/api/trac
       return new NextResponse(JSON.stringify({ error: 'Tracker ID is required' }), { status: 400 });
     }
 
-    // Example: Fetch tracker data (replace with your actual logic)
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const trackerData = await getTrackerById(trackerId)
 
     if (!trackerData) {

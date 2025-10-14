@@ -24,6 +24,14 @@ type TrackerDetails = Prisma.TrackerGetPayload<{
   };
 }> & { _count: { listings: number } };
 
+// Mock getServerSession using vi.hoisted
+const mockGetServerSession = vi.hoisted(() => vi.fn());
+
+vi.mock('next-auth', () => ({
+  default: vi.fn(),
+  getServerSession: mockGetServerSession,
+}));
+
 // Mock the getTrackers function
 vi.mock('@/queries/trackers', () => ({
   getTrackers: vi.fn(),
@@ -36,6 +44,10 @@ const mockedGetTrackers = vi.mocked(getTrackers);
 describe('/api/trackers GET', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock authenticated session by default
+    mockGetServerSession.mockResolvedValue({
+      user: { id: '1', email: 'user@example.com' },
+    });
   });
 
   it('should return trackers with default pagination', async () => {
@@ -76,7 +88,7 @@ describe('/api/trackers GET', () => {
     expect(data.pagination.limit).toBe(10);
     expect(data.pagination.offset).toBe(0);
     expect(data.pagination.hasMore).toBe(false);
-    expect(getTrackers).toHaveBeenCalledWith({ tagNames: [], sort: 'createdAt', order: 'desc', limit: 10, offset: 0 });
+    expect(getTrackers).toHaveBeenCalledWith({ tagNames: [], sort: 'createdAt', order: 'desc', limit: 10, offset: 0, isArchived: false });
   });
 
   it('should handle query parameters correctly', async () => {
@@ -88,7 +100,7 @@ describe('/api/trackers GET', () => {
     const response = await GET(request);
     const data = await response.json();
 
-    expect(getTrackers).toHaveBeenCalledWith({ tagNames: ['Electronics', 'Books'], sort: 'title', order: 'asc', limit: 5, offset: 10 });
+    expect(getTrackers).toHaveBeenCalledWith({ tagNames: ['Electronics', 'Books'], sort: 'title', order: 'asc', limit: 5, offset: 10, isArchived: false });
     expect(data.pagination.total).toBe(25);
     expect(data.pagination.hasMore).toBe(true); // 10 + 5 < 25
   });
@@ -102,7 +114,7 @@ describe('/api/trackers GET', () => {
     const response = await GET(request);
     const data = await response.json();
 
-    expect(getTrackers).toHaveBeenCalledWith({ tagNames: ['Electronics'], sort: 'createdAt', order: 'desc', limit: 10, offset: 0 });
+    expect(getTrackers).toHaveBeenCalledWith({ tagNames: ['Electronics'], sort: 'createdAt', order: 'desc', limit: 10, offset: 0, isArchived: false });
     expect(data.pagination.total).toBe(0);
     expect(data.pagination.hasMore).toBe(false);
   });
@@ -145,6 +157,6 @@ describe('/api/trackers GET', () => {
     expect(data.pagination.total).toBe(20);
     expect(data.pagination.limit).toBe(5);
     expect(data.pagination.offset).toBe(10);
-    expect(getTrackers).toHaveBeenCalledWith({ tagNames: [], sort: 'createdAt', order: 'desc', limit: 5, offset: 10 });
+    expect(getTrackers).toHaveBeenCalledWith({ tagNames: [], sort: 'createdAt', order: 'desc', limit: 5, offset: 10, isArchived: false });
   });
 });

@@ -2,6 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { createMockTracker, createMockUser, createMockTag, createMockListing } from '@/app/utils/factories';
 
+// Mock getServerSession using vi.hoisted
+const mockGetServerSession = vi.hoisted(() => vi.fn());
+
+vi.mock('next-auth', () => ({
+  default: vi.fn(),
+  getServerSession: mockGetServerSession,
+}));
+
 // Mock the getTrackerById function
 const mockGetTrackerById = vi.fn();
 
@@ -15,6 +23,10 @@ const { GET } = await import('./route');
 describe('/api/trackers/[trackerId] GET', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock authenticated session by default
+    mockGetServerSession.mockResolvedValue({
+      user: { id: '1', email: 'user@example.com' },
+    });
   });
 
   it('should return tracker data for valid ID', async () => {

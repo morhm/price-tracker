@@ -1,6 +1,8 @@
 import { scrapeListingData } from '@/app/utils/web-scrape';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { authOptions } from '../../../../auth/[...nextauth]/route';
+import { getServerSession } from 'next-auth';
 
 export async function POST(requst: NextRequest, context: RouteContext<'/api/trackers/listings/[listingId]/refresh'>) {
   try {
@@ -9,6 +11,12 @@ export async function POST(requst: NextRequest, context: RouteContext<'/api/trac
 
     if (!listingId) {
       return new NextResponse(JSON.stringify({ error: 'Listing ID is required' }), { status: 400 });
+    }
+
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const listing = await prisma.listing.findUnique({ where: { id: listingId } });

@@ -3,6 +3,14 @@ import { NextRequest } from "next/server"
 import { POST } from './route'
 import { createMockListing } from '@/app/utils/factories'
 
+// Mock getServerSession using vi.hoisted
+const mockGetServerSession = vi.hoisted(() => vi.fn());
+
+vi.mock('next-auth', () => ({
+  default: vi.fn(),
+  getServerSession: mockGetServerSession,
+}));
+
 vi.mock('@/lib/db', () => ({
   prisma: {
     listing: {
@@ -22,6 +30,10 @@ const { prisma } = await import('@/lib/db');
 describe('/api/trackers/listings[listingId]/refresh POST', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock authenticated session by default
+    mockGetServerSession.mockResolvedValue({
+      user: { id: '1', email: 'user@example.com' },
+    });
   })
 
   it('should return updated listing data on successful refresh', async () => {
