@@ -289,12 +289,6 @@ export default function TrackerPage() {
               </>
             )}
           </div>
-          <button
-            onClick={() => setShowAddListingModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
-          >
-            Add Listing
-          </button>
         </div>
       </div>
 
@@ -464,10 +458,16 @@ export default function TrackerPage() {
 
         {/* Right Column - Listings */}
         <div className="flex-1 bg-white p-6 overflow-y-auto">
-          <div className="mb-6">
+          <div className="mb-6 flex justify-between items-center">
             <h2 className="text-2xl font-semibold text-gray-900">
               Listings ({trackerData?.listings?.length || 0})
             </h2>
+            <button
+              onClick={() => setShowAddListingModal(true)}
+              className="bg-white border-2 border-blue-500 hover:bg-gray-300 text-black px-6 py-2 rounded-md"
+            >
+              Add Listing
+            </button>
           </div>
 
           {trackerData?.listings?.length > 0 ? (

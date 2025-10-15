@@ -331,18 +331,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Add Tracker Button */}
-        {!loading && !error && (
-          <div className="mb-6">
-            <button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              onClick={() => setIsCreateModalOpen(true)}
-            >
-              Add Tracker
-            </button>
-          </div>
-        )}
-
         {/* Trackers Grid */}
         {!loading && !error && (
           <>
@@ -352,9 +340,25 @@ export default function Dashboard() {
                 <p className="text-gray-400 text-sm mt-1">
                   Create your first tracker to get started
                 </p>
+                <button
+                  className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  onClick={() => setIsCreateModalOpen(true)}
+                >
+                  Add Tracker
+                </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-semibold text-gray-900">Trackers</h2>
+                  <button
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    onClick={() => setIsCreateModalOpen(true)}
+                  >
+                    Add Tracker
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {trackers.map((tracker) => (
                   <div
                     key={tracker.id}
@@ -461,35 +465,36 @@ export default function Dashboard() {
                     </p>
                   </div>
                 ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {trackers.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-4 mt-6">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm text-gray-700">
-                    Showing {offset + 1} to{' '}
-                    {Math.min(offset + limit, pagination.total)} of{' '}
-                    {pagination.total} results
-                  </p>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={offset === 0}
-                      className="bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-1 rounded-md text-sm"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={handleNextPage}
-                      disabled={!pagination.hasMore}
-                      className="bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-1 rounded-md text-sm"
-                    >
-                      Next
-                    </button>
-                  </div>
                 </div>
+
+                {/* Pagination */}
+                {trackers.length > 0 && (
+                  <div className="bg-white rounded-lg shadow p-4 mt-6">
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-gray-700">
+                        Showing {offset + 1} to{' '}
+                        {Math.min(offset + limit, pagination.total)} of{' '}
+                        {pagination.total} results
+                      </p>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={handlePrevPage}
+                          disabled={offset === 0}
+                          className="bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-1 rounded-md text-sm"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          onClick={handleNextPage}
+                          disabled={!pagination.hasMore}
+                          className="bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 px-3 py-1 rounded-md text-sm"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </>
