@@ -1,7 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 import { TagInput, useToast } from "@/components";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 type FormData = {
   title: string;
@@ -31,6 +31,7 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
   });
   const router = useRouter();
   const { showError } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch available tags
   const { data: tagsData } = useQuery({
@@ -49,9 +50,10 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
   const tagsValue = watch('tags') || '';
   const tagsArray = tagsValue ? tagsValue.split(',').map(t => t.trim()).filter(Boolean) : [];
 
-  const handleCreateNewTracker: SubmitHandler<FormData> = async (data) => {
-    const { title, description, tags, targetPrice } = data;
-    try {
+  // Define mutation at component level
+  const createTrackerMutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      const { title, description, tags, targetPrice } = data;
       const tagArray = tags ? tags.split(',').map(tag => ({ name: tag.trim() })).filter(tag => tag.name) : [];
 
       const response = await fetch('/api/trackers', {
@@ -64,22 +66,29 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
           description,
           targetPrice: targetPrice ? parseFloat(targetPrice) : null,
           tags: tagArray,
-        }),
+        })
       });
 
-      const responseJson = await response.json();
-
-      if (response.ok) {
-        handleCloseModal();
-        router.push('/tracker/' + responseJson.id);
-      } else {
-        showError(responseJson.message || 'Failed to create tracker');
-        console.error('Failed to create tracker');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create tracker');
       }
-    } catch (error) {
-      console.error('Error creating tracker:', error);
-      showError('Network error. Please try again.');
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['trackers'] });
+      handleCloseModal();
+      router.push('/tracker/' + data.id);
+    },
+    onError: (error: Error) => {
+      showError(error.message || 'Failed to create tracker');
+      console.error('Failed to create tracker:', error);
     }
+  });
+
+  const handleCreateNewTracker: SubmitHandler<FormData> = async (data) => {
+    createTrackerMutation.mutate(data);
   };
 
   const handleInvalidForm: SubmitErrorHandler<FormData> = (errors) => {
@@ -163,9 +172,10 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
           </button>
           <button
             type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={createTrackerMutation.isPending}
           >
-            Create
+            {createTrackerMutation.isPending ? 'Creating...' : 'Create'}
           </button>
         </div>
       </form>
