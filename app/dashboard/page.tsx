@@ -54,13 +54,15 @@ export default function Dashboard() {
   const sortBy = 'createdAt';
   const sortOrder = 'desc' as const;
   const [offset, setOffset] = useState(0);
-  const [showArchived, setShowArchived] = useState(false);
+  const [activeTab, setActiveTab] = useState<'all' | 'archived'>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [trackerToDelete, setTrackerToDelete] = useState<Tracker | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const { data: session, status } = useSession();
   const limit = 10;
+
+  const showArchived = activeTab === 'archived';
 
   // Fetch tags
   const { data: tagsData } = useQuery({
@@ -200,7 +202,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors ${showArchived ? 'bg-gray-200' : 'bg-gray-50'}`}>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -224,12 +226,44 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {/* Filters and Controls */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex flex-wrap gap-4 items-center justify-between">
+        {/* Tabs */}
+        <div className="bg-white rounded-lg shadow mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="flex -mb-px">
+              <button
+                onClick={() => {
+                  setActiveTab('all');
+                  setOffset(0);
+                }}
+                className={`px-6 py-4 text-sm font-medium border-b-2 ${
+                  activeTab === 'all'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('archived');
+                  setOffset(0);
+                }}
+                className={`px-6 py-4 text-sm font-medium border-b-2 ${
+                  activeTab === 'archived'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Archived
+              </button>
+            </nav>
+          </div>
+
+          {/* Filters and Controls */}
+          <div className="p-6">
             <div className="flex flex-wrap gap-4 items-center">
               {/* Tag Filter */}
-              <TagFilter 
+              <TagFilter
                 allTags={allTags}
                 selectedTags={selectedTags}
                 clearTags={clearTags}
@@ -243,17 +277,6 @@ export default function Dashboard() {
                 Refresh
               </button>
             </div>
-
-            <button
-              onClick={() => setShowArchived(!showArchived)}
-              className={`${
-                showArchived
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              } px-4 py-2 rounded-md text-sm font-medium`}
-            >
-              {showArchived ? 'Show Active' : 'Show Archived'}
-            </button>
           </div>
         </div>
 
