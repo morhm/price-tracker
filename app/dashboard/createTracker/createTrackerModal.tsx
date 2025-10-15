@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 import { TagInput, useToast } from "@/components";
+import { useQuery } from '@tanstack/react-query';
 
 type FormData = {
   title: string;
@@ -30,6 +31,20 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
   });
   const router = useRouter();
   const { showError } = useToast();
+
+  // Fetch available tags
+  const { data: tagsData } = useQuery({
+    queryKey: ['tags'],
+    queryFn: async () => {
+      const response = await fetch('/api/tags');
+      if (!response.ok) {
+        throw new Error('Failed to fetch tags');
+      }
+      return response.json();
+    }
+  });
+
+  const availableTags = tagsData?.tags || [];
 
   const tagsValue = watch('tags') || '';
   const tagsArray = tagsValue ? tagsValue.split(',').map(t => t.trim()).filter(Boolean) : [];
@@ -114,6 +129,7 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
               onChange={(newTags) => {
                 setValue('tags', newTags.join(','));
               }}
+              availableTags={availableTags}
             />
           </div>
           <div className="flex flex-col">

@@ -51,6 +51,20 @@ export default function TrackerPage() {
     enabled: !!trackerId,
   });
 
+  // Fetch available tags
+  const { data: tagsData } = useQuery({
+    queryKey: ['tags'],
+    queryFn: async () => {
+      const response = await fetch('/api/tags');
+      if (!response.ok) {
+        throw new Error('Failed to fetch tags');
+      }
+      return response.json();
+    }
+  });
+
+  const availableTags = tagsData?.tags || [];
+
 
   const handleAddListing = async (data: { url: string; title: string }) => {
     try {
@@ -412,6 +426,7 @@ export default function TrackerPage() {
                 <TagInput
                   tags={selectedTags}
                   onChange={(newTags) => setSelectedTags(newTags)}
+                  availableTags={availableTags}
                 />
                 <div className="flex gap-2">
                   <button
