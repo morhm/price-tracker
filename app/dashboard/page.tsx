@@ -284,11 +284,11 @@ export default function Dashboard() {
         )}
 
         {!loading && !error && deleteModalOpen && trackerToDelete && (
-          <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+          <div className="fixed inset-0 bg-black/10 backdrop-blur-[2px] flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md border border-gray-300">
               <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
               <p className="text-gray-600 mb-4">
-                {"Are you sure you want to delete the tracker \"{trackerToDelete.title}\"? This action cannot be undone."}
+                {`Are you sure you want to delete the tracker \"${trackerToDelete.title}\"? This action cannot be undone.`}
               </p>
               <div className="flex justify-end space-x-2">
                 <button

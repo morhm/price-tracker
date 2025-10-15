@@ -23,9 +23,8 @@ export default function AddListingModal({ handleClose, handleAddListing }: AddLi
 
   return (
     <form onSubmit={handleSubmit(handleAddListing)}>
-      <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
-        <div className="bg-white p-6 
-        ounded-lg shadow-lg w-full max-w-md">
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
           <h2 className="text-xl font-bold mb-4">Add New Listing</h2>
           <p className="text-gray-600 mb-4">Add a new listing to track for this tracker.</p>
 
