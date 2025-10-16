@@ -97,11 +97,12 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
   }
 
   return (
-    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg">
-      <h1>Create Tracker Modal</h1>
-      <p>This is a placeholder for the create tracker modal.\n\n\n\n\n\n\n\n</p>
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Create Tracker</h1>
+        <p className="text-gray-600 mb-4">Add a new tracker to monitor prices</p>
 
-      <form onSubmit={handleSubmit(handleCreateNewTracker, handleInvalidForm)} className="mt-4">
+        <form onSubmit={handleSubmit(handleCreateNewTracker, handleInvalidForm)}>
         <div className="flex flex-col gap-4 mb-4 ">
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700">
@@ -179,6 +180,7 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
           </button>
         </div>
       </form>
+      </div>
     </div>
   );
 }
