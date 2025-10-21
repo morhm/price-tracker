@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getTrackers, createNewTracker } from '@/queries/trackers';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { ensureTagsExist } from '@/queries/tags';
 
 export async function GET(request: NextRequest) {

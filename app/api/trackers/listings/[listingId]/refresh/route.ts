@@ -1,7 +1,7 @@
 import { scrapeListingData } from '@/app/utils/web-scrape';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { authOptions } from '../../../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { getServerSession } from 'next-auth';
 
 export async function POST(requst: NextRequest, context: RouteContext<'/api/trackers/listings/[listingId]/refresh'>) {
