@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import CreateTrackerModal from './createTracker/createTrackerModal';
 import { useSession, signOut } from 'next-auth/react';
 import { useTagFilter } from './hooks/useTagFilter';
-import { TagFilter } from './components/tagFilter';
+import { Tabs } from './components/tabs';
 
 // Types
 interface Tracker {
@@ -50,11 +50,18 @@ interface FetchTrackersResponse {
   pagination: PaginationInfo;
 }
 
+enum DefaultTabs {
+  All = 'all',
+  Archived = 'archived',
+}
+
+type TabName = (typeof DefaultTabs)[keyof typeof DefaultTabs] | (string & {});
+
 export default function Dashboard() {
   const sortBy = 'createdAt';
   const sortOrder = 'desc' as const;
   const [offset, setOffset] = useState(0);
-  const [activeTab, setActiveTab] = useState<'all' | 'archived'>('all');
+  const [activeTab, setActiveTab] = useState<TabName>(DefaultTabs.All);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [trackerToDelete, setTrackerToDelete] = useState<Tracker | null>(null);
@@ -62,7 +69,24 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const limit = 10;
 
+
   const showArchived = activeTab === 'archived';
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openDropdownId !== null) {
+        const dropdownElement = document.querySelector(`[data-dropdown-id="${openDropdownId}"]`);
+        if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
+          setOpenDropdownId(null);
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [openDropdownId]);
 
   // Fetch tags
   const { data: tagsData } = useQuery({
@@ -227,58 +251,18 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
-              <button
-                onClick={() => {
-                  setActiveTab('all');
-                  setOffset(0);
-                }}
-                className={`px-6 py-4 text-sm font-medium border-b-2 ${
-                  activeTab === 'all'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab('archived');
-                  setOffset(0);
-                }}
-                className={`px-6 py-4 text-sm font-medium border-b-2 ${
-                  activeTab === 'archived'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Archived
-              </button>
-            </nav>
-          </div>
-
-          {/* Filters and Controls */}
-          <div className="p-6">
-            <div className="flex flex-wrap gap-4 items-center">
-              {/* Tag Filter */}
-              <TagFilter
-                allTags={allTags}
-                selectedTags={selectedTags}
-                clearTags={clearTags}
-                toggleTag={toggleTag}
-              />
-
-              <button
-                onClick={() => fetchTrackers()}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Refresh
-              </button>
-            </div>
-          </div>
-        </div>
+        <Tabs
+          activeTab={activeTab}
+          setActiveTab={(tab: TabName) => {
+            setActiveTab(tab);
+            setOffset(0);
+          }}
+          onAddTracker={() => setIsCreateModalOpen(true)}
+          allTags={allTags}
+          selectedTags={selectedTags}
+          toggleTag={toggleTag}
+          clearTags={clearTags}
+        />
 
         {/* Loading State */}
         {loading && (
@@ -349,20 +333,12 @@ export default function Dashboard() {
               </div>
             ) : (
               <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-semibold text-gray-900">Trackers</h2>
-                  <button
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                    onClick={() => setIsCreateModalOpen(true)}
-                  >
-                    Add Tracker
-                  </button>
-                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {trackers.map((tracker) => (
-                  <div
+                  <Link
                     key={tracker.id}
-                    className={`rounded-lg shadow hover:shadow-md transition-all p-6 group ${
+                    href={`/tracker/${tracker.id}`}
+                    className={`rounded-lg shadow hover:shadow-lg transition-all p-6 group cursor-pointer ${
                       showArchived ? 'bg-gray-100 border border-gray-300' : 'bg-white'
                     }`}
                   >
@@ -370,10 +346,18 @@ export default function Dashboard() {
                       <h3 className="text-lg font-semibold text-gray-900 truncate">
                         {tracker.title}
                       </h3>
-                      <div className="relative">
+                      <div className="relative" data-dropdown-id={tracker.id}>
                         <button
-                          onClick={() => setOpenDropdownId(openDropdownId === tracker.id ? null : tracker.id)}
-                          className="text-gray-500 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setOpenDropdownId(openDropdownId === tracker.id ? null : tracker.id);
+                          }}
+                          className={`hover:text-gray-700 transition-opacity ${
+                            openDropdownId === tracker.id
+                              ? 'text-gray-900 opacity-100'
+                              : 'text-gray-500 opacity-0 group-hover:opacity-100'
+                          }`}
                           title="Options"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -384,13 +368,21 @@ export default function Dashboard() {
                           <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
                             <div className="py-1">
                               <button
-                                onClick={() => handleArchiveTracker(tracker)}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleArchiveTracker(tracker);
+                                }}
                                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                               >
                                 Archive
                               </button>
                               <button
-                                onClick={() => handleDeleteTracker(tracker)}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleDeleteTracker(tracker);
+                                }}
                                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                               >
                                 Delete
@@ -446,24 +438,11 @@ export default function Dashboard() {
                       </div>
                     )}
 
-                    {/* Actions */}
-                    <div className="flex space-x-2">
-                      <Link
-                        href={`/tracker/${tracker.id}`}
-                        className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm py-2 px-3 rounded-md"
-                      >
-                        View Details
-                      </Link>
-                      <button className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm py-2 px-3 rounded-md">
-                        Edit
-                      </button>
-                    </div>
-
                     {/* Timestamp */}
                     <p className="text-xs text-gray-400 mt-3">
                       Updated {new Date(tracker.updatedAt).toLocaleDateString()}
                     </p>
-                  </div>
+                  </Link>
                 ))}
                 </div>
 
