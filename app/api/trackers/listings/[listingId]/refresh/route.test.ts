@@ -17,6 +17,9 @@ vi.mock('@/lib/db', () => ({
       findUnique: vi.fn(),
       update: vi.fn(),
     },
+    listingSnapshot: {
+      create: vi.fn(),
+    },
   },
 }));
 
@@ -62,6 +65,7 @@ describe('/api/trackers/listings[listingId]/refresh POST', () => {
       currentPrice: scrapedData.price,
       isAvailable: scrapedData.isAvailable,
     });
+    prisma.listingSnapshot.create = vi.fn().mockResolvedValue({});
 
     vi.mocked(scrapeListingData).mockResolvedValue(scrapedData);
 
@@ -78,6 +82,15 @@ describe('/api/trackers/listings[listingId]/refresh POST', () => {
     expect(data).toHaveProperty('id', 1);
     expect(data).toHaveProperty('currentPrice', 90);
     expect(data).toHaveProperty('isAvailable', true);
+
+    expect(prisma.listingSnapshot.create).toHaveBeenCalledWith({
+      data: {
+        listingId: 1,
+        price: 90,
+        isAvailable: true,
+        source: 'manual',
+      }
+    });
   })
 
   it('should return 404 if listing not found', async () => {

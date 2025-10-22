@@ -4,7 +4,7 @@ import { getTrackerById, updateTrackerById } from '@/queries/trackers';
 import { authOptions } from '@/lib/auth';
 import { ensureTagsExist } from '@/queries/tags';
 
-export async function GET(request: NextRequest, context: RouteContext<'/api/trackers/[trackerId]/listings'>) {
+export async function GET(request: NextRequest, context: RouteContext<'/api/trackers/[trackerId]'>) {
   try {
     const { trackerId: paramTrackerId } = await context.params;
     const trackerId = parseInt(paramTrackerId, 10);
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest, context: RouteContext<'/api/trac
   }
 }
 
-export async function PATCH(request: NextRequest, context: RouteContext<'/api/trackers/[trackerId]/listings'>) {
+export async function PATCH(request: NextRequest, context: RouteContext<'/api/trackers/[trackerId]'>) {
   try {
     const { trackerId: paramTrackerId } = await context.params;
     const trackerId = parseInt(paramTrackerId, 10);
