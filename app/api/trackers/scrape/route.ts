@@ -36,6 +36,17 @@ export async function GET(request: Request) {
               lastCheckedAt: new Date(),
             }
           });
+
+          // create a new history snapshot
+          await prisma.listingSnapshot.create({
+            data: {
+              listingId: listing.id,
+              price: scrapedData.price || listing.currentPrice,
+              isAvailable: scrapedData.isAvailable,
+              source: 'cron',
+            }
+          });
+          
           scrapedListingsCount++;
         } catch (err) {
           const errorMsg = `Failed to scrape listing ${listing.id}: ${(err as Error).message}`;

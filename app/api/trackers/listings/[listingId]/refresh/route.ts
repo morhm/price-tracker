@@ -32,7 +32,15 @@ export async function POST(requst: NextRequest, context: RouteContext<'/api/trac
       data: {
         currentPrice: scrapedData.price || listing.currentPrice,
         isAvailable: scrapedData.isAvailable,
-        // optionally, you can add a price history entry here
+      }
+    });
+
+    await prisma.listingSnapshot.create({
+      data: {
+        listingId: listing.id,
+        price: scrapedData.price || listing.currentPrice,
+        isAvailable: scrapedData.isAvailable,
+        source: 'manual',
       }
     });
 
