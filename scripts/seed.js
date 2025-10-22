@@ -184,12 +184,237 @@ async function main() {
 
   console.log('✅ Created listings');
 
+  // Create listing snapshots (historical price data)
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+  const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+  const fourDaysAgo = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000);
+  const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
+
+  const snapshots = await Promise.all([
+    // iPhone 15 Pro on Apple.com - price dropped from 1199 to 1099
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[0].id,
+        price: 1199.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: fiveDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[0].id,
+        price: 1199.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: fourDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[0].id,
+        price: 1149.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: threeDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[0].id,
+        price: 1099.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: twoDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[0].id,
+        price: 1099.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: oneDayAgo,
+      },
+    }),
+
+    // iPhone 15 Pro on Amazon - stable price
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[1].id,
+        price: 1049.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: fiveDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[1].id,
+        price: 1049.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: threeDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[1].id,
+        price: 1049.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: oneDayAgo,
+      },
+    }),
+
+    // MacBook Air on Apple - price increased
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[2].id,
+        price: 1099.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: fiveDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[2].id,
+        price: 1149.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: threeDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[2].id,
+        price: 1199.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: oneDayAgo,
+      },
+    }),
+
+    // MacBook Air on Best Buy - price dropped to target
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[3].id,
+        price: 1199.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: fiveDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[3].id,
+        price: 1149.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: threeDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[3].id,
+        price: 1099.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: oneDayAgo,
+      },
+    }),
+
+    // JavaScript book - price fluctuation
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[4].id,
+        price: 34.99,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: fiveDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[4].id,
+        price: 32.99,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: threeDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[4].id,
+        price: 29.99,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: oneDayAgo,
+      },
+    }),
+
+    // Nike Air Max on nike.com - stable
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[5].id,
+        price: 150.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: fiveDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[5].id,
+        price: 150.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: oneDayAgo,
+      },
+    }),
+
+    // Nike Air Max on Footlocker - went out of stock
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[6].id,
+        price: 140.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: fiveDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[6].id,
+        price: 140.00,
+        isAvailable: true,
+        source: 'cron',
+        createdAt: threeDaysAgo,
+      },
+    }),
+    prisma.listingSnapshot.create({
+      data: {
+        listingId: listings[6].id,
+        price: 140.00,
+        isAvailable: false,
+        source: 'cron',
+        createdAt: oneDayAgo,
+      },
+    }),
+  ]);
+
+  console.log('✅ Created listing snapshots');
+
   console.log('🎉 Seed completed successfully!');
   console.log(`Created:
   - ${users.length} users
-  - ${tags.length} tags  
+  - ${tags.length} tags
   - ${trackers.length} trackers
-  - ${listings.length} listings`);
+  - ${listings.length} listings
+  - ${snapshots.length} listing snapshots`);
 }
 
 main()
