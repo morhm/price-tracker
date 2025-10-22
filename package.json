@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "prisma": {
-    "seed": "ts-node --esm prisma/seed.ts"
+    "seed": "node scripts/seed.js"
   },
   "scripts": {
     "dev": "next dev --turbopack",

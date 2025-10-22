@@ -85,6 +85,17 @@ model Listing {
   isAvailable   Boolean
   lastCheckedAt DateTime
   createdAt     DateTime @default(now())
+  history     ListingSnapshot[]
 
   @@unique([trackerId, url])
+}
+
+model ListingSnapshot {
+  id          Int      @id @default(autoincrement())
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  listingId   Int
+  price       Decimal
+  isAvailable Boolean
+  source      String
+  createdAt   DateTime @default(now())
 }
