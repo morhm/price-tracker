@@ -98,14 +98,14 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md min-w-1/3">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Create Tracker</h1>
         <p className="text-gray-600 mb-4">Add a new tracker to monitor prices</p>
 
         <form onSubmit={handleSubmit(handleCreateNewTracker, handleInvalidForm)}>
         <div className="flex flex-col gap-4 mb-4 ">
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700">
+          <div className="flex flex-col max-w-3/4">
+            <label className="text-md font-bold text-gray-700">
               Title
             </label>
             <input
@@ -114,51 +114,67 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
                 minLength: { value: 1, message: 'Title is required' }
               })}
               type="text"
-              className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter tracker title"
+              className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none"
+              placeholder="Title for your new tracker"
             />
             {errors.title && <span className="text-red-500 text-sm mt-1">{errors.title.message}</span>}
           </div>
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700">
+          <div className="flex flex-col max-w-3/4">
+            <label className="text-md font-bold text-gray-700">
               Description
             </label>
             <textarea
               {...register('description')}
-              className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter tracker description"
+              className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none"
+              placeholder="Describe what you are tracking (optional)"
               rows={3}
             ></textarea>
           </div>
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700">
+          <div className="flex flex-col max-w-3/4">
+            <label className="text-md font-bold text-gray-700">
               Tags
             </label>
-            <TagInput
-              tags={tagsArray}
-              onChange={(newTags) => {
-                setValue('tags', newTags.join(','));
-              }}
-              availableTags={availableTags}
-            />
+            <p className="text-sm text-gray-500">
+              Add tags to help organize your trackers (e.g, "clothing", "electronics")
+            </p>
+            <div className="mt-1">
+              <TagInput
+                tags={tagsArray}
+                onChange={(newTags) => {
+                  setValue('tags', newTags.join(','));
+                }}
+                availableTags={availableTags}
+                placeholder="Type a tag and press Enter"
+              />
+            </div>
           </div>
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700">
+          <div className="flex flex-col max-w-3/4">
+            <label className="text-md font-bold text-gray-700">
               Target Price
             </label>
-            <input
-              {...register('targetPrice', {
-                validate: (value) => {
-                  if (!value || value === '') return true;
-                  const num = Number(value);
-                  return (!isNaN(num) && num > 0) || 'Target price must be a valid positive number';
-                }
-              })}
-              type="number"
-              step="0.01"
-              className="mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter target price (optional)"
-            />
+            <div className="relative mt-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <input
+                {...register('targetPrice', {
+                  validate: (value) => {
+                    if (!value || value === '') return true;
+                    const num = Number(value);
+                    return (!isNaN(num) && num > 0) || 'Target price must be a valid positive number';
+                  }
+                })}
+                type="number"
+                step="any"
+                onBlur={(e) => {
+                  const value = e.target.value;
+                  if (value && !isNaN(Number(value))) {
+                    const formatted = parseFloat(value).toFixed(2);
+                    setValue('targetPrice', formatted);
+                  }
+                }}
+                className="w-full pl-7 pr-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter target price (optional)"
+              />
+            </div>
             {errors.targetPrice && <span className="text-red-500 text-sm mt-1">{errors.targetPrice.message}</span>}
           </div>
         </div>
@@ -179,7 +195,7 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
             {createTrackerMutation.isPending ? 'Creating...' : 'Create'}
           </button>
         </div>
-      </form>
+        </form>
       </div>
     </div>
   );

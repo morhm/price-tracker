@@ -6,9 +6,15 @@ interface TagInputProps {
   tags: string[];
   onChange: (tags: string[]) => void;
   availableTags?: { id: number; name: string }[];
+  placeholder?: string;
 }
 
-export default function TagInput({ tags, onChange, availableTags = [] }: TagInputProps) {
+export default function TagInput({
+  tags,
+  onChange,
+  availableTags = [],
+  placeholder = 'Add a tag and press Enter',
+}: TagInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -70,7 +76,7 @@ export default function TagInput({ tags, onChange, availableTags = [] }: TagInpu
           onKeyDown={handleKeyDown}
           onFocus={() => setShowDropdown(true)}
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-          placeholder="Add a tag and press Enter"
+          placeholder={placeholder}
         />
       </div>
       {showDropdown && filteredSuggestions.length > 0 && (

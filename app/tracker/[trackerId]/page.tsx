@@ -21,6 +21,8 @@ export default function TrackerPage() {
   const [editedTargetPrice, setEditedTargetPrice] = useState<string>('');
   const [isEditingTags, setIsEditingTags] = useState<boolean>(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
+  const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
 
   const {
     data: trackerData,
@@ -215,6 +217,36 @@ export default function TrackerPage() {
   const handleCancelEditTags = () => {
     setIsEditingTags(false);
     setSelectedTags([]);
+  };
+
+  const handleDeleteListing = (listing: Listing) => {
+    setListingToDelete(listing);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteListing = async () => {
+    if (!listingToDelete) return;
+
+    try {
+      const response = await fetch(`/api/trackers/listings/${listingToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setDeleteModalOpen(false);
+        setListingToDelete(null);
+        refetchTracker();
+      } else {
+        console.error('Failed to delete listing');
+      }
+    } catch (error) {
+      console.error('Error deleting listing:', error);
+    }
+  };
+
+  const cancelDeleteListing = () => {
+    setDeleteModalOpen(false);
+    setListingToDelete(null);
   };
 
   if (loading) {
@@ -473,11 +505,36 @@ export default function TrackerPage() {
           {trackerData?.listings?.length > 0 ? (
             <div className="grid gap-4">
               {trackerData.listings.map((listing: Listing) => (
-                <div key={listing.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                <div key={listing.id} className="group border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">{listing.title}</h3>
                       <p className="text-sm text-gray-600 mb-3">{listing.domain}</p>
+                      <div className="text-xs text-gray-500 mt-2">
+                        Last checked: {new Date(listing.lastCheckedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="text-right ml-6">
+                      <div className="flex items-center justify-end gap-2 mb-1">
+                        <div className="text-2xl font-bold text-gray-900">
+                          ${listing.currentPrice.toString()}
+                        </div>
+                      </div>
+                      <div className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${
+                        listing.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {listing.isAvailable ? 'Available' : 'Unavailable'}
+                      </div>
+                      <div className="mt-4 flex items-center justify-end gap-4">
+                      <button
+                          onClick={() => handleDeleteListing(listing)}
+                          className="text-red-600 hover:text-red-800 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Delete listing"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
                       <a
                         href={listing.url}
                         target="_blank"
@@ -486,18 +543,6 @@ export default function TrackerPage() {
                       >
                         View Listing →
                       </a>
-                    </div>
-                    <div className="text-right ml-6">
-                      <div className="text-2xl font-bold text-gray-900 mb-1">
-                        ${listing.currentPrice.toString()}
-                      </div>
-                      <div className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${
-                        listing.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {listing.isAvailable ? 'Available' : 'Unavailable'}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-2">
-                        Last checked: {new Date(listing.lastCheckedAt).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
@@ -520,6 +565,32 @@ export default function TrackerPage() {
           handleAddListing={handleAddListing}
           handleClose={() => setShowAddListingModal(false)}
         />
+      )}
+
+      {/* Delete Listing Modal */}
+      {deleteModalOpen && listingToDelete && (
+        <div className="fixed inset-0 bg-black/10 backdrop-blur-[2px] flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md border border-gray-300">
+            <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
+            <p className="text-gray-600 mb-4">
+              {`Are you sure you want to delete the listing "${listingToDelete.title}"? This action cannot be undone.`}
+            </p>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={cancelDeleteListing}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteListing}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

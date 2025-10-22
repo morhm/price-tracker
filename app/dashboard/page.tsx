@@ -7,7 +7,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useTagFilter } from './hooks/useTagFilter';
 import { Tabs } from './components/tabs';
 import { TrackersGrid } from './components/trackersGrid';
-import { Tracker } from './types';
+import { TrackerData } from './types';
 
 // Types
 
@@ -19,7 +19,7 @@ interface PaginationInfo {
 }
 
 interface FetchTrackersResponse {
-  trackers: Tracker[];
+  trackers: TrackerData[];
   pagination: PaginationInfo;
 }
 
@@ -37,7 +37,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabName>(DefaultTabs.All);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [trackerToDelete, setTrackerToDelete] = useState<Tracker | null>(null);
+  const [trackerToDelete, setTrackerToDelete] = useState<TrackerData | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const { data: session, status } = useSession();
   const limit = 10;
@@ -113,12 +113,12 @@ export default function Dashboard() {
     }
   };
 
-  const handleDeleteTracker = (tracker: Tracker) => {
+  const handleDeleteTracker = (tracker: TrackerData) => {
     setTrackerToDelete(tracker);
     setDeleteModalOpen(true);
   };
 
-  const handleArchiveTracker = async (tracker: Tracker) => {
+  const handleArchiveTracker = async (tracker: TrackerData) => {
     try {
       const response = await fetch(`/api/trackers/${tracker.id}`, {
         method: 'PATCH',
