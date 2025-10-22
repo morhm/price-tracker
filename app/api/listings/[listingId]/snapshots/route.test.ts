@@ -8,7 +8,7 @@ vi.mock('@/queries/listingSnapshots', () => ({
 
 const { getListingSnapshotsByListingId } = await import('@/queries/listingSnapshots');
 
-describe('/api/trackers/[trackerId]/listings/[listingId]/listingSnapshots GET', () => {
+describe('/api/listings/[listingId]/snapshots GET', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   })
@@ -35,12 +35,11 @@ describe('/api/trackers/[trackerId]/listings/[listingId]/listingSnapshots GET', 
 
     vi.mocked(getListingSnapshotsByListingId).mockResolvedValue(mockSnapshots);
 
-    const request = new NextRequest('http://localhost/api/trackers/1/listings/1/listingSnapshots', {
+    const request = new NextRequest('http://localhost/api/listings/1/snapshots', {
       method: 'GET',
     });
     const context = {
       params: Promise.resolve({
-        trackerId: '1',
         listingId: '1'
       })
     };
@@ -64,12 +63,11 @@ describe('/api/trackers/[trackerId]/listings/[listingId]/listingSnapshots GET', 
   it('should return empty array when no snapshots exist', async () => {
     vi.mocked(getListingSnapshotsByListingId).mockResolvedValue([]);
 
-    const request = new NextRequest('http://localhost/api/trackers/1/listings/1/listingSnapshots', {
+    const request = new NextRequest('http://localhost/api/listings/1/snapshots', {
       method: 'GET',
     });
     const context = {
       params: Promise.resolve({
-        trackerId: '1',
         listingId: '1'
       })
     };
@@ -84,12 +82,11 @@ describe('/api/trackers/[trackerId]/listings/[listingId]/listingSnapshots GET', 
   })
 
   it('should return 400 for invalid listing ID', async () => {
-    const request = new NextRequest('http://localhost/api/trackers/1/listings/abc/listingSnapshots', {
+    const request = new NextRequest('http://localhost/api/listings/abc/snapshots', {
       method: 'GET',
     });
     const context = {
       params: Promise.resolve({
-        trackerId: '1',
         listingId: 'abc'
       })
     };
@@ -103,12 +100,11 @@ describe('/api/trackers/[trackerId]/listings/[listingId]/listingSnapshots GET', 
   })
 
   it('should return 400 for non-numeric listing ID', async () => {
-    const request = new NextRequest('http://localhost/api/trackers/1/listings/xyz/listingSnapshots', {
+    const request = new NextRequest('http://localhost/api/listings/xyz/snapshots', {
       method: 'GET',
     });
     const context = {
       params: Promise.resolve({
-        trackerId: '1',
         listingId: 'xyz'
       })
     };
@@ -123,12 +119,11 @@ describe('/api/trackers/[trackerId]/listings/[listingId]/listingSnapshots GET', 
   it('should return 500 on database error', async () => {
     vi.mocked(getListingSnapshotsByListingId).mockRejectedValue(new Error('Database error'));
 
-    const request = new NextRequest('http://localhost/api/trackers/1/listings/1/listingSnapshots', {
+    const request = new NextRequest('http://localhost/api/listings/1/snapshots', {
       method: 'GET',
     });
     const context = {
       params: Promise.resolve({
-        trackerId: '1',
         listingId: '1'
       })
     };

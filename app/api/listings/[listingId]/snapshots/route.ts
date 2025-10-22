@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getListingSnapshotsByListingId } from '@/queries/listingSnapshots';
 
-export async function GET(request: NextRequest, context: RouteContext<'/api/trackers/[trackerId]/listings/[listingId]/listingSnapshots'>) {
+export async function GET(_request: NextRequest, context: RouteContext<'/api/listings/[listingId]/snapshots'>) {
   try {
     const { listingId: paramListingId } = await context.params;
     const listingId = parseInt(paramListingId, 10);

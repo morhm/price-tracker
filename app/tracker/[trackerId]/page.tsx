@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import LoadingTrackerPage from './loading';
 import AddListingModal from '../addListingModal';
+import ListingsView from '../components/listingsView';
 import { useQuery } from '@tanstack/react-query';
 import type { Listing, Tag } from '@/app/generated/prisma';
 import { TagInput } from '@/components';
@@ -502,60 +503,10 @@ export default function TrackerPage() {
             </button>
           </div>
 
-          {trackerData?.listings?.length > 0 ? (
-            <div className="grid gap-4">
-              {trackerData.listings.map((listing: Listing) => (
-                <div key={listing.id} className="group border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{listing.title}</h3>
-                      <p className="text-sm text-gray-600 mb-3">{listing.domain}</p>
-                      <div className="text-xs text-gray-500 mt-2">
-                        Last checked: {new Date(listing.lastCheckedAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <div className="text-right ml-6">
-                      <div className="flex items-center justify-end gap-2 mb-1">
-                        <div className="text-2xl font-bold text-gray-900">
-                          ${listing.currentPrice.toString()}
-                        </div>
-                      </div>
-                      <div className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${
-                        listing.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {listing.isAvailable ? 'Available' : 'Unavailable'}
-                      </div>
-                      <div className="mt-4 flex items-center justify-end gap-4">
-                      <button
-                          onClick={() => handleDeleteListing(listing)}
-                          className="text-red-600 hover:text-red-800 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Delete listing"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      <a
-                        href={listing.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
-                      >
-                        View Listing →
-                      </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              <div className="text-6xl mb-4">📋</div>
-              <p className="text-lg mb-2">No listings added yet</p>
-              <p className="text-sm">Add your first listing to start tracking prices</p>
-            </div>
-          )}
+          <ListingsView
+            listings={trackerData?.listings || []}
+            onDeleteListing={handleDeleteListing}
+          />
         </div>
       </div>
 
