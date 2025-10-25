@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { getServerSession } from 'next-auth';
 
-export async function POST(requst: NextRequest, context: RouteContext<'/api/trackers/listings/[listingId]/refresh'>) {
+export async function POST(requst: NextRequest, context: RouteContext<'/api/listings/[listingId]/refresh'>) {
   try {
     const { listingId: paramListingId } = await context.params;
     const listingId = parseInt(paramListingId, 10);

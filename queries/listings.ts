@@ -15,7 +15,7 @@ export async function createNewListing(listingData: NewListingData): Promise<Lis
   const newListing = await prisma.listing.create({
     data: {
       ...listingData,
-      currentPrice: listingData.currentPrice ?? "",
+      currentPrice: listingData.currentPrice ?? 0,
       title: listingData.title || 'Untitled Listing'
     }
   });

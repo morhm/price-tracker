@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { getTagColor } from '@/app/utils/tagColors';
 
 export async function ensureTagsExist(
   userId: number,
@@ -21,7 +22,8 @@ export async function ensureTagsExist(
     .filter((tag) => !existingTagNames.has(tag.name))
     .map((tag) => ({
       name: tag.name,
-      userId
+      userId,
+      color: getTagColor(tag.name)
     }));
 
   // Create new tags if any

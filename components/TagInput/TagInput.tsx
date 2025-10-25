@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { Tag } from './Tag';
 
 interface TagInputProps {
   tags: string[];
   onChange: (tags: string[]) => void;
-  availableTags?: { id: number; name: string }[];
+  availableTags?: { id: number; name: string; color: string }[];
   placeholder?: string;
 }
 
@@ -18,10 +19,11 @@ export default function TagInput({
   const [inputValue, setInputValue] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const filteredSuggestions = availableTags.filter(tag =>
-    tag.name.toLowerCase().includes(inputValue.toLowerCase()) &&
-    !tags.includes(tag.name)
-  );
+  const filteredSuggestions = availableTags.filter(tag => {
+    const matchesInput = inputValue === '' || tag.name.toLowerCase().includes(inputValue.toLowerCase());
+    const notAlreadySelected = !tags.includes(tag.name);
+    return matchesInput && notAlreadySelected;
+  });
 
   const addTag = (tag: string) => {
     const trimmedTag = tag.trim();
@@ -53,26 +55,24 @@ export default function TagInput({
   return (
     <div className="relative">
       <div className="border border-gray-300 rounded-md p-2 flex flex-wrap gap-2">
-        {tags.map(tag => (
-          <span
-            key={tag}
-            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-          >
-            {tag}
-            <button
-              type="button"
-              className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none"
-              onClick={() => removeTag(tag)}
-            >
-              &times;
-            </button>
-          </span>
-        ))}
+        {tags.map(tag => {
+          const tagData = availableTags.find(t => t.name === tag);
+          return (
+            <Tag
+              name={tag}
+              color={tagData?.color}
+              onRemove={removeTag}
+            />
+          );
+        })}
         <input
           type="text"
           className="flex-grow outline-none p-1"
           value={inputValue}
-          onChange={e => setInputValue(e.target.value)}
+          onChange={e => {
+            setInputValue(e.target.value);
+            setShowDropdown(true);
+          }}
           onKeyDown={handleKeyDown}
           onFocus={() => setShowDropdown(true)}
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
@@ -85,9 +85,13 @@ export default function TagInput({
             <button
               key={tag.id}
               type="button"
-              className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
+              className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm flex items-center gap-2"
               onClick={() => handleSuggestionClick(tag.name)}
             >
+              <span
+                className="inline-block w-3 h-3 rounded-full"
+                style={{ backgroundColor: tag.color }}
+              />
               {tag.name}
             </button>
           ))}

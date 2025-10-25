@@ -36,7 +36,7 @@ export const Tabs = ({
   });
 
   return (
-    <div className="bg-white rounded-lg shadow mb-6">
+    <div>
       <div className="border-b border-gray-200">
         <nav className="flex -mb-px">
           <button
@@ -65,7 +65,7 @@ export const Tabs = ({
       </div>
 
       {/* Filters and Controls */}
-      <div className="p-6">
+      <div className="p-6 border-b border-gray-200">
         <div className="flex flex-wrap justify-end gap-4 items-center">
           {/* Filter Button */}
           <div className="relative" ref={filterDropdownRef}>

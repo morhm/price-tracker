@@ -68,6 +68,7 @@ model Tag {
   userId    Int
   trackers  Tracker[]
   name      String
+  color     String
   createdAt DateTime  @default(now())
 
   @@unique([userId, name])
