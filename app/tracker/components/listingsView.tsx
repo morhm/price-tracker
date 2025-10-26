@@ -90,7 +90,7 @@ export default function ListingsView({ listings, onDeleteListing }: ListingsView
           <div className="absolute top-2 right-2" ref={openMenuId === listing.id ? menuRef : null}>
             <button
               onClick={() => setOpenMenuId(openMenuId === listing.id ? null : listing.id)}
-              className="text-gray-600 hover:text-gray-800 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="text-gray-600 hover:text-gray-800 p-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
               title="Options"
             >
               <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
@@ -151,14 +151,14 @@ export default function ListingsView({ listings, onDeleteListing }: ListingsView
             <div className="flex flex-row items-center text-xs text-gray-500 mt-2">
               <span>Last checked: {new Date(listing.lastCheckedAt).toLocaleDateString()}</span>
               <button
-                className="inline-flex items-center text-gray-600 hover:text-gray-800 text-sm font-medium ml-2"
+                className="inline-flex items-center text-gray-600 hover:text-gray-800 text-sm font-medium ml-2 cursor-pointer"
                 onClick={() => handleRefreshListingClick(listing.id)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-refresh-cw-icon lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>
               </button>
             </div>
             <button
-              className="inline-flex items-center text-gray-600 hover:text-gray-800 text-sm font-medium"
+              className="inline-flex items-center text-gray-600 hover:text-gray-800 text-sm font-medium cursor-pointer"
               onClick={() => handleDetailClick(listing.id)}
             >
               {detailsListingId === listing.id ? "Hide Details ↑" : "View Details ↓"}
