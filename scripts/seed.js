@@ -2,6 +2,30 @@ const { PrismaClient } = require('../app/generated/prisma');
 
 const prisma = new PrismaClient();
 
+// Tag colors
+const TAG_COLORS = [
+  '#3B82F6', // Blue
+  '#10B981', // Green
+  '#F59E0B', // Amber
+  '#EF4444', // Red
+  '#8B5CF6', // Violet
+  '#EC4899', // Pink
+  '#14B8A6', // Teal
+  '#F97316', // Orange
+  '#6366F1', // Indigo
+  '#84CC16', // Lime
+];
+
+function getTagColor(tagName) {
+  let hash = 0;
+  for (let i = 0; i < tagName.length; i++) {
+    const char = tagName.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length];
+}
+
 async function main() {
   console.log('🌱 Starting seed...');
 
@@ -27,18 +51,21 @@ async function main() {
       data: {
         name: 'Electronics',
         userId: users[0].id,
+        color: getTagColor('Electronics'),
       },
     }),
     prisma.tag.create({
       data: {
         name: 'Books',
         userId: users[0].id,
+        color: getTagColor('Books'),
       },
     }),
     prisma.tag.create({
       data: {
         name: 'Clothing',
         userId: users[1].id,
+        color: getTagColor('Clothing'),
       },
     }),
   ]);

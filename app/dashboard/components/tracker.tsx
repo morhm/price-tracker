@@ -9,6 +9,7 @@ interface TrackerProps {
   tags: Array<{
     id: number;
     name: string;
+    color: string;
   }>;
   count: {
     listings: number;
@@ -123,7 +124,8 @@ export const Tracker = ({
           {tags.slice(0, 3).map((tag) => (
             <span
               key={tag.id}
-              className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+              className="inline-block text-white text-xs px-2 py-1 rounded-full"
+              style={{ backgroundColor: tag.color }}
             >
               {tag.name}
             </span>

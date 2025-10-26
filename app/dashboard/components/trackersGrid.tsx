@@ -57,9 +57,9 @@ export const TrackersGrid = ({
   }, [openDropdownId, setOpenDropdownId]);
 
   return (
-    <>
+    <div className="p-6">
       {trackers.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-8 text-center">
+        <div className="p-8 text-center">
           <p className="text-gray-500 text-lg">No trackers found</p>
           {!showArchived && (
             <>
@@ -99,7 +99,7 @@ export const TrackersGrid = ({
 
           {/* Pagination */}
           {trackers.length > 0 && (
-            <div className="bg-white rounded-lg shadow p-4 mt-6">
+            <div className="border-t border-gray-200 pt-4 mt-6">
               <div className="flex justify-between items-center">
                 <p className="text-sm text-gray-700">
                   Showing {offset + 1} to{' '}
@@ -127,6 +127,6 @@ export const TrackersGrid = ({
           )}
         </div>
       )}
-    </>
+    </div>
   )
 }

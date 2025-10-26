@@ -7,23 +7,22 @@ import AddListingModal from '../addListingModal';
 import ListingsView from '../components/listingsView';
 import { useQuery } from '@tanstack/react-query';
 import type { Listing, Tag } from '@/app/generated/prisma';
-import { TagInput } from '@/components';
+import { TagInput, Tag as TagComponent  } from '@/components';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function TrackerPage() {
   const params = useParams();
   const trackerId = params.trackerId as string;
 
   const [showAddListingModal, setShowAddListingModal] = useState<boolean>(false);
-  const [isEditingDescription, setIsEditingDescription] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editedDescription, setEditedDescription] = useState<string>('');
-  const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false);
   const [editedTitle, setEditedTitle] = useState<string>('');
-  const [isEditingTargetPrice, setIsEditingTargetPrice] = useState<boolean>(false);
   const [editedTargetPrice, setEditedTargetPrice] = useState<string>('');
-  const [isEditingTags, setIsEditingTags] = useState<boolean>(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
+  const queryClient = useQueryClient();
 
   const {
     data: trackerData,
@@ -54,6 +53,49 @@ export default function TrackerPage() {
     enabled: !!trackerId,
   });
 
+  const handleSaveTracker = async () => {
+    try {
+      const isTitleDirty = editedTitle !== trackerData?.title;
+      const isDescriptionDirty = editedDescription !== trackerData?.description;
+      const isEditingTargetPriceDirty = editedTargetPrice !== (trackerData?.targetPrice?.toString() || '');
+      const isEditingTagsDirty = selectedTags.sort().toString() !== trackerData?.tags?.map((tag: Tag) => tag.name).sort().toString();
+
+      const editedFields = {
+        ...(isTitleDirty && { title: editedTitle }),
+        ...(isDescriptionDirty && { description: editedDescription }),
+        ...(isEditingTargetPriceDirty && { targetPrice: editedTargetPrice ? parseFloat(editedTargetPrice) : null }),
+        ...(isEditingTagsDirty && { tags: selectedTags.map(name => ({ name })) }),
+      }
+
+      const response = await fetch(`/api/trackers/${trackerId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editedFields),
+      });
+
+      if (response.ok) {
+        setIsEditing(false);
+        queryClient.invalidateQueries({ queryKey: ['trackers'], exact: false });
+        queryClient.invalidateQueries({ queryKey: ['tracker', trackerId] });
+      } else {
+        console.error('Failed to update tracker');
+      }
+    } catch (error) {
+      console.error('Error updating tracker:', error);
+    }
+  }
+
+  const handleCancelEditTracker = () => {
+    setEditedTitle('');
+    setEditedDescription('');
+    setEditedTargetPrice('');
+    setSelectedTags([]);
+
+    setIsEditing(false);
+  }
+
   // Fetch available tags
   const { data: tagsData } = useQuery({
     queryKey: ['tags'],
@@ -67,7 +109,6 @@ export default function TrackerPage() {
   });
 
   const availableTags = tagsData?.tags || [];
-
 
   const handleAddListing = async (data: { url: string; title: string }) => {
     try {
@@ -90,135 +131,6 @@ export default function TrackerPage() {
       console.error('Error adding listing:', error);
     }
   }
-
-  const handleEditDescription = () => {
-    setEditedDescription(trackerData?.description || '');
-    setIsEditingDescription(true);
-  };
-
-  const handleSaveDescription = async () => {
-    try {
-      const response = await fetch(`/api/trackers/${trackerId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ description: editedDescription }),
-      });
-
-      console.log('Response from updating description:', response);
-
-      if (response.ok) {
-        setIsEditingDescription(false);
-        refetchTracker();
-      } else {
-        console.error('Failed to update description');
-      }
-    } catch (error) {
-      console.error('Error updating description:', error);
-    }
-  };
-
-  const handleCancelEditDescription = () => {
-    setIsEditingDescription(false);
-    setEditedDescription('');
-  };
-
-  const handleEditTitle = () => {
-    setEditedTitle(trackerData?.title || '');
-    setIsEditingTitle(true);
-  };
-
-  const handleSaveTitle = async () => {
-    try {
-      const response = await fetch(`/api/trackers/${trackerId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ title: editedTitle }),
-      });
-
-      if (response.ok) {
-        setIsEditingTitle(false);
-        refetchTracker();
-      } else {
-        console.error('Failed to update title');
-      }
-    } catch (error) {
-      console.error('Error updating title:', error);
-    }
-  };
-
-  const handleCancelEditTitle = () => {
-    setIsEditingTitle(false);
-    setEditedTitle('');
-  };
-
-  const handleEditTargetPrice = () => {
-    setEditedTargetPrice(trackerData?.targetPrice?.toString() || '');
-    setIsEditingTargetPrice(true);
-  };
-
-  const handleSaveTargetPrice = async () => {
-    try {
-      const targetPrice = editedTargetPrice ? parseFloat(editedTargetPrice) : null;
-      const response = await fetch(`/api/trackers/${trackerId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ targetPrice }),
-      });
-
-      if (response.ok) {
-        setIsEditingTargetPrice(false);
-        refetchTracker();
-      } else {
-        console.error('Failed to update target price');
-      }
-    } catch (error) {
-      console.error('Error updating target price:', error);
-    }
-  };
-
-  const handleCancelEditTargetPrice = () => {
-    setIsEditingTargetPrice(false);
-    setEditedTargetPrice('');
-  };
-
-  const handleEditTags = () => {
-    setSelectedTags(trackerData?.tags?.map((tag: Tag) => tag.name) || []);
-    setIsEditingTags(true);
-  };
-
-  const handleSaveTags = async () => {
-    try {
-      const tags = selectedTags.map(name => ({ name }));
-      const response = await fetch(`/api/trackers/${trackerId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ tags }),
-      });
-
-      if (response.ok) {
-        setIsEditingTags(false);
-        setSelectedTags([]);
-        refetchTracker();
-      } else {
-        console.error('Failed to update tags');
-      }
-    } catch (error) {
-      console.error('Error updating tags:', error);
-    }
-  };
-
-  const handleCancelEditTags = () => {
-    setIsEditingTags(false);
-    setSelectedTags([]);
-  };
 
   const handleDeleteListing = (listing: Listing) => {
     setListingToDelete(listing);
@@ -277,7 +189,7 @@ export default function TrackerPage() {
       <div className="bg-white border-b p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {isEditingTitle ? (
+            {isEditing ? (
               <div className="flex items-center gap-2">
                 <input
                   type="text"
@@ -286,40 +198,38 @@ export default function TrackerPage() {
                   className="text-3xl font-bold text-gray-900 bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600"
                   autoFocus
                 />
-                <button
-                  onClick={handleSaveTitle}
-                  className="text-green-600 hover:text-green-700 p-1"
-                  title="Save title"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </button>
-                <button
-                  onClick={handleCancelEditTitle}
-                  className="text-red-600 hover:text-red-700 p-1"
-                  title="Cancel edit"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
               </div>
             ) : (
               <>
                 <h1 className="text-3xl font-bold text-gray-900">
                   {trackerData?.title}
                 </h1>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-4 self-end">
+            {isEditing ? (
+              <>
+                <button onClick={handleCancelEditTracker} className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                  Cancel
+                </button>
                 <button
-                  onClick={handleEditTitle}
-                  className="text-gray-500 hover:text-gray-700 p-1"
-                  title="Edit title"
+                  onClick={handleSaveTracker}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
+                  Save Changes
                 </button>
               </>
+            ) : (
+              <button className="bg-white border-2 border-blue-500 hover:bg-gray-100 text-gray-900 font-medium px-4 py-1 rounded-md" onClick={() => {
+                setEditedTitle(trackerData?.title || '');
+                setEditedDescription(trackerData?.description || '');
+                setEditedTargetPrice(trackerData?.targetPrice?.toString() || '');
+                setSelectedTags(trackerData?.tags?.map((tag: Tag) => tag.name) || []);
+                setIsEditing(true);
+              }}>
+                Edit
+              </button>
             )}
           </div>
         </div>
@@ -336,19 +246,8 @@ export default function TrackerPage() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-sm font-medium text-gray-700">Description</label>
-                  {!isEditingDescription && (
-                    <button
-                      onClick={handleEditDescription}
-                      className="text-gray-500 hover:text-gray-700 p-1"
-                      title="Edit description"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                  )}
                 </div>
-                {isEditingDescription ? (
+                {isEditing ? (
                   <div className="space-y-2">
                     <textarea
                       value={editedDescription}
@@ -357,43 +256,16 @@ export default function TrackerPage() {
                       rows={3}
                       placeholder="Enter description..."
                     />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleSaveDescription}
-                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={handleCancelEditDescription}
-                        className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400"
-                      >
-                        Cancel
-                      </button>
-                    </div>
                   </div>
                 ) : (
-                  <p className="text-gray-900 bg-gray-50 p-3 rounded-md">
+                  <p className="text-gray-900 p-3 rounded-md">
                     {trackerData?.description || 'No description provided'}
                   </p>
                 )}
               </div>
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-sm font-medium text-gray-700">Target Price</label>
-                  {!isEditingTargetPrice && (
-                    <button
-                      onClick={handleEditTargetPrice}
-                      className="text-gray-500 hover:text-gray-700 p-1"
-                      title="Edit target price"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-                {isEditingTargetPrice ? (
+                <label className="block text-sm font-medium text-gray-700">Target Price</label>
+                {isEditing ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-1">
                       <span className="text-2xl font-bold text-gray-600">$</span>
@@ -408,20 +280,6 @@ export default function TrackerPage() {
                         autoFocus
                       />
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleSaveTargetPrice}
-                        className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={handleCancelEditTargetPrice}
-                        className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400"
-                      >
-                        Cancel
-                      </button>
-                    </div>
                   </div>
                 ) : (
                   <p className="text-2xl font-bold text-green-600">
@@ -434,52 +292,24 @@ export default function TrackerPage() {
 
           {/* Tags Section */}
           <div>
-            <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900">Tags</h2>
-              {!isEditingTags && (
-                <button
-                  onClick={handleEditTags}
-                  className="text-gray-500 hover:text-gray-700 p-1"
-                  title="Edit tags"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
-              )}
-            </div>
-            {isEditingTags ? (
+            {isEditing ? (
               <div className="space-y-3">
                 <TagInput
                   tags={selectedTags}
                   onChange={(newTags) => setSelectedTags(newTags)}
                   availableTags={availableTags}
                 />
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSaveTags}
-                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={handleCancelEditTags}
-                    className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                </div>
               </div>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mt-3">
                 {trackerData?.tags?.length > 0 ? (
                   trackerData.tags.map((tag: Tag) => (
-                    <span
+                    <TagComponent
+                      name={tag.name}
+                      color={tag.color}
                       key={tag.id}
-                      className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                    >
-                      {tag.name}
-                    </span>
+                    />
                   ))
                 ) : (
                   <p className="text-gray-500 italic">No tags assigned</p>

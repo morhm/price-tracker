@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 interface TagFilterProps {
-  allTags: { id: number; name: string }[];
+  allTags: { id: number; name: string; color: string }[];
   toggleTag: (tag: string) => void;
   clearTags: () => void;
   selectedTags: string[];
@@ -31,21 +31,25 @@ export const TagFilter = ({ allTags, selectedTags, toggleTag, clearTags }: TagFi
       <label className="text-sm font-medium text-gray-700">Tags:</label>
       <div className="relative flex-1 max-w-2xl">
         <div className="border border-gray-300 rounded-md p-2 flex flex-wrap gap-2 min-h-[42px]">
-          {selectedTags.map(tag => (
-            <span
-              key={tag}
-              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-            >
-              {tag}
-              <button
-                type="button"
-                className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none"
-                onClick={() => removeTag(tag)}
+          {selectedTags.map(tag => {
+            const tagData = allTags.find(t => t.name === tag);
+            return (
+              <span
+                key={tag}
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
+                style={{ backgroundColor: tagData?.color || '#3B82F6' }}
               >
-                &times;
-              </button>
-            </span>
-          ))}
+                {tag}
+                <button
+                  type="button"
+                  className="ml-2 text-white hover:text-gray-200 focus:outline-none"
+                  onClick={() => removeTag(tag)}
+                >
+                  &times;
+                </button>
+              </span>
+            );
+          })}
           <input
             type="text"
             className="flex-grow outline-none p-1 min-w-[120px]"
@@ -65,9 +69,13 @@ export const TagFilter = ({ allTags, selectedTags, toggleTag, clearTags }: TagFi
               <button
                 key={tag.id}
                 type="button"
-                className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
+                className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm flex items-center gap-2"
                 onClick={() => handleTagSelect(tag.name)}
               >
+                <span
+                  className="inline-block w-3 h-3 rounded-full"
+                  style={{ backgroundColor: tag.color }}
+                />
                 {tag.name}
               </button>
             ))}

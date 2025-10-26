@@ -12,6 +12,7 @@ export interface TrackerData {
   tags: Array<{
     id: number;
     name: string;
+    color: string;
   }>;
   listings: Array<{
     id: number;

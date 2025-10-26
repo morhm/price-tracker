@@ -150,7 +150,7 @@ export async function updateTrackerById(trackerId: number, updateData: {
   const userId = existingTracker.userId;
   const currentTagNames = existingTracker.tags.map(tag => tag.name);
   const newTagNames = tags ? tags.map(tag => tag.name) : [];
-  
+
   const tagsToConnect = tags ? tags.filter(tag => !currentTagNames.includes(tag.name)) : [];
   const tagsToDisconnect = existingTracker.tags.filter(tag => !newTagNames.includes(tag.name));
 
