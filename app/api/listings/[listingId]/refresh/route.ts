@@ -27,23 +27,44 @@ export async function POST(requst: NextRequest, context: RouteContext<'/api/list
 
     const scrapedData = await scrapeListingData(listing.url);
 
-    const updatedListing = await prisma.listing.update({
-      where: { id: listingId },
-      data: {
-        currentPrice: scrapedData.price || listing.currentPrice,
-        isAvailable: scrapedData.isAvailable,
-      }
-    });
+    let updatedListing = null;
+    await prisma.$transaction(async (prismaClient) => {
+      updatedListing = await prismaClient.listing.update({
+        where: { id: listingId },
+        data: {
+          currentPrice: scrapedData.price || listing.currentPrice,
+          isAvailable: scrapedData.isAvailable,
+        }
+      });
 
-    await prisma.listingSnapshot.create({
-      data: {
-        listingId: listing.id,
-        price: scrapedData.price || listing.currentPrice,
-        isAvailable: scrapedData.isAvailable,
-        source: 'manual',
-      }
-    });
+      if (scrapedData.price !== null && scrapedData.isAvailable) {
+        // Update lowestAvailablePrice on tracker if applicable
+        const tracker = await prismaClient.tracker.findUnique({ where: { id: listing.trackerId } });
+        if (tracker) {
+          const newLowestPrice = tracker.lowestAvailablePrice
+            ? Math.min(tracker.lowestAvailablePrice.toNumber(), scrapedData.price)
+            : scrapedData.price;
 
+          await prismaClient.tracker.update({
+            where: { id: tracker.id },
+            data: {
+              lowestAvailablePrice: newLowestPrice,
+            }
+          });
+        }
+      }
+
+      // create a new history snapshot
+      await prismaClient.listingSnapshot.create({
+        data: {
+          listingId: listing.id,
+          price: scrapedData.price || listing.currentPrice,
+          isAvailable: scrapedData.isAvailable,
+          source: 'manual',
+        }
+      });
+    })
+    
     return NextResponse.json(updatedListing, { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('Error refreshing listing data:', error);

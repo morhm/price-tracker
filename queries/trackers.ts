@@ -96,6 +96,28 @@ export async function getTrackers({ tagNames, sort, order, limit, offset, isArch
   }
 }
 
+export async function getAllTrackersForScrape() {
+  const trackers = await prisma.tracker.findMany({
+    where: {
+      isArchived: false
+    },
+    include: {
+      listings: {
+        select: {
+          id: true,
+          url: true,
+          currentPrice: true,
+        }
+      },
+      _count: {
+        select: { listings: true }
+      }
+    },
+  });
+
+  return trackers;
+}
+
 export async function createNewTracker(trackerData: {
   title: string;
   description: string;

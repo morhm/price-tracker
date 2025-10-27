@@ -3,6 +3,7 @@ export interface TrackerData {
   title: string;
   description?: string;
   targetPrice?: number;
+  lowestAvailablePrice?: number;
   createdAt: string;
   updatedAt: string;
   user: {
