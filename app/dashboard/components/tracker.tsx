@@ -6,6 +6,7 @@ interface TrackerProps {
   title: string;
   description?: string;
   targetPrice?: number;
+  lowestAvailablePrice?: number;
   tags: Array<{
     id: number;
     name: string;
@@ -27,6 +28,7 @@ export const Tracker = ({
   title,
   description,
   targetPrice,
+  lowestAvailablePrice,
   tags,
   count,
   updatedAt,
@@ -100,16 +102,18 @@ export const Tracker = ({
 
       {/* Stats */}
       <div className="flex justify-between items-center mb-4">
-        <div className="text-sm text-gray-500">
-          <span className="block">
-            {count.listings} listing{count.listings !== 1 ? 's' : ''}
-          </span>
-          <span className="block">
-            {tags.length} tag{tags.length !== 1 ? 's' : ''}
-          </span>
-        </div>
+        {
+          !!lowestAvailablePrice ? (
+            <div className="text-left">
+              <p className="text-xs text-gray-500">Lowest Available Price</p>
+              <p className="text-sm font-medium text-blue-600">
+                ${lowestAvailablePrice}
+              </p>
+            </div>
+          ) : null
+        }
         {targetPrice && (
-          <div className="text-right">
+          <div className="text-center">
             <p className="text-xs text-gray-500">Target Price</p>
             <p className="text-sm font-medium text-green-600">
               ${targetPrice}
