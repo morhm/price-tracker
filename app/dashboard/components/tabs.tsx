@@ -5,7 +5,7 @@ interface TabsProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   onAddTracker: () => void;
-  allTags: { id: number; name: string }[];
+  allTags: { id: number; name: string; color: string; }[];
   selectedTags: string[];
   toggleTag: (tag: string) => void;
   clearTags: () => void;
