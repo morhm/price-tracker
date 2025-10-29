@@ -4,12 +4,6 @@ export async function getTrackerById(trackerId: number) {
   const tracker = await prisma.tracker.findUnique({
     where: { id: trackerId },
     include: {
-      user: {
-        select: {
-          id: true,
-          email: true
-        }
-      },
       tags: true,
       listings: {
         select: {
@@ -59,23 +53,12 @@ export async function getTrackers({ tagNames, sort, order, limit, offset, isArch
     take: limit,
     skip: offset,
     include: {
-      user: {
-        select: {
-          id: true,
-          email: true
-        }
-      },
       tags: true,
-      listings: {
-        select: {
-          id: true,
-          title: true,
-          url: true,
-          domain: true,
-          currentPrice: true,
-          isAvailable: true,
-          lastCheckedAt: true
-        }
+      listingEvents: {
+        orderBy: {
+          createdAt: 'desc' as const
+        },
+        take: 5,
       },
       _count: {
         select: {

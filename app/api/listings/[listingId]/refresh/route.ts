@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { authOptions } from '@/lib/auth';
 import { getServerSession } from 'next-auth';
+import { extractListingEvents } from '@/app/utils/extractListingEvents';
+import { SnapshotData } from '@/app/utils/types';
+import { EventType } from '@/app/generated/prisma';
 
 export async function POST(requst: NextRequest, context: RouteContext<'/api/listings/[listingId]/refresh'>) {
   try {
@@ -25,8 +28,21 @@ export async function POST(requst: NextRequest, context: RouteContext<'/api/list
       return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
     }
 
+    // Scrape data from the listing URL
     const scrapedData = await scrapeListingData(listing.url);
 
+    // Aggregate events to be created
+    const listingSnapshots = await prisma.listingSnapshot.findMany({
+      where: { listingId: listing.id },
+      orderBy: { createdAt: 'desc' },
+      take: 1,
+    });
+    const snapshotData: SnapshotData = {
+      price: scrapedData.price ?? listing.currentPrice.toNumber(),
+      isAvailable: scrapedData.isAvailable,
+    }
+
+    const listingEventData: { eventType: EventType; metadata?: any }[] = extractListingEvents(snapshotData, listingSnapshots)
     let updatedListing = null;
     await prisma.$transaction(async (prismaClient) => {
       updatedListing = await prismaClient.listing.update({
@@ -62,6 +78,16 @@ export async function POST(requst: NextRequest, context: RouteContext<'/api/list
           isAvailable: scrapedData.isAvailable,
           source: 'manual',
         }
+      });
+
+      // add listing events if any
+      await prismaClient.listingEvent.createMany({
+        data: listingEventData.map(event => ({
+          listingId: listing.id,
+          trackerId: listing.trackerId,
+          eventType: event.eventType,
+          metadata: event.metadata,
+        }))
       });
     })
     

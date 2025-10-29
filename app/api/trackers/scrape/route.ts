@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { scrapeListingData } from '@/app/utils/web-scrape';
 import { getAllTrackersForScrape } from '@/queries/trackers';
+import { extractListingEvents } from '@/app/utils/extractListingEvents';
+import { SnapshotData } from '@/app/utils/types';
 
 export async function GET(request: Request) {
   try {
@@ -25,6 +27,20 @@ export async function GET(request: Request) {
       for (const listing of listings) {
         try {
           const scrapedData = await scrapeListingData(listing.url);
+
+          // Get previous snapshots to extract events
+          const listingSnapshots = await prisma.listingSnapshot.findMany({
+            where: { listingId: listing.id },
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          });
+
+          const snapshotData: SnapshotData = {
+            price: scrapedData.price ?? listing.currentPrice.toNumber(),
+            isAvailable: scrapedData.isAvailable,
+          };
+
+          const listingEventData = extractListingEvents(snapshotData, listingSnapshots);
 
           await prisma.$transaction(async (prisma) => {
             await prisma.listing.update({
@@ -58,6 +74,16 @@ export async function GET(request: Request) {
                 isAvailable: scrapedData.isAvailable,
                 source: 'cron',
               }
+            });
+
+            // create listing events
+            await prisma.listingEvent.createMany({
+              data: listingEventData.map(event => ({
+                listingId: listing.id,
+                trackerId: tracker.id,
+                eventType: event.eventType,
+                metadata: event.metadata,
+              }))
             });
           })
 
