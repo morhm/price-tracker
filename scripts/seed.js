@@ -33,17 +33,38 @@ async function main() {
   const users = await Promise.all([
     prisma.user.create({
       data: {
-        email: 'john@example.com',
-      },
+        email: 'markorozc@gmail.com',
+      }
     }),
     prisma.user.create({
       data: {
-        email: 'jane@example.com',
+        email: 'john@example.com',
       },
     }),
   ]);
 
   console.log('✅ Created users');
+
+  // Create user account for OAuth login (optional - only if env vars are set)
+  if (process.env.SEED_GOOGLE_PROVIDER_ACCOUNT_ID && process.env.SEED_GOOGLE_ACCESS_TOKEN && process.env.SEED_GOOGLE_ID_TOKEN) {
+    const account = await prisma.account.create({
+      data: {
+        userId: users[0].id,
+        type: "oauth",
+        provider: "google",
+        providerAccountId: process.env.SEED_GOOGLE_PROVIDER_ACCOUNT_ID,
+        access_token: process.env.SEED_GOOGLE_ACCESS_TOKEN,
+        id_token: process.env.SEED_GOOGLE_ID_TOKEN,
+        expires_at: Math.floor(Date.now() / 1000) + 3600, // Expires in 1 hour from now
+        token_type: "bearer",
+        scope: "openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"
+      }
+    });
+
+    console.log('✅ Created account');
+  } else {
+    console.log('⚠️  Skipped account creation (no OAuth credentials in .env)');
+  }
 
   // Create tags
   const tags = await Promise.all([
@@ -79,6 +100,7 @@ async function main() {
         title: 'iPhone 15 Pro',
         description: 'Tracking iPhone 15 Pro prices',
         targetPrice: 999.00,
+        lowestAvailablePrice: 1049.00, // Amazon price (lowest available)
         userId: users[0].id,
         tags: {
           connect: [{ id: tags[0].id }],
@@ -90,6 +112,7 @@ async function main() {
         title: 'MacBook Air M3',
         description: 'Looking for MacBook Air deals',
         targetPrice: 1099.00,
+        lowestAvailablePrice: 1099.00, // Best Buy price (lowest available)
         userId: users[0].id,
         tags: {
           connect: [{ id: tags[0].id }],
@@ -101,6 +124,7 @@ async function main() {
         title: 'JavaScript: The Good Parts',
         description: 'Programming book',
         targetPrice: 25.00,
+        lowestAvailablePrice: 29.99, // Amazon price (only available listing)
         userId: users[0].id,
         tags: {
           connect: [{ id: tags[1].id }],
@@ -112,6 +136,7 @@ async function main() {
         title: 'Nike Air Max',
         description: 'Sneakers on sale',
         targetPrice: 120.00,
+        lowestAvailablePrice: 150.00, // Nike.com price (Footlocker is out of stock)
         userId: users[1].id,
         tags: {
           connect: [{ id: tags[2].id }],
@@ -435,13 +460,109 @@ async function main() {
 
   console.log('✅ Created listing snapshots');
 
+  // Create listing events based on the price changes
+  const events = await Promise.all([
+    // iPhone 15 Pro on Apple.com - price drops
+    prisma.listingEvent.create({
+      data: {
+        listingId: listings[0].id,
+        trackerId: trackers[0].id,
+        eventType: 'PRICE_DROP',
+        metadata: { oldPrice: 1199.00, newPrice: 1149.00 },
+        createdAt: threeDaysAgo,
+      },
+    }),
+    prisma.listingEvent.create({
+      data: {
+        listingId: listings[0].id,
+        trackerId: trackers[0].id,
+        eventType: 'PRICE_DROP',
+        metadata: { oldPrice: 1149.00, newPrice: 1099.00 },
+        createdAt: twoDaysAgo,
+      },
+    }),
+
+    // MacBook Air on Apple - price increases
+    prisma.listingEvent.create({
+      data: {
+        listingId: listings[2].id,
+        trackerId: trackers[1].id,
+        eventType: 'PRICE_INCREASE',
+        metadata: { oldPrice: 1099.00, newPrice: 1149.00 },
+        createdAt: threeDaysAgo,
+      },
+    }),
+    prisma.listingEvent.create({
+      data: {
+        listingId: listings[2].id,
+        trackerId: trackers[1].id,
+        eventType: 'PRICE_INCREASE',
+        metadata: { oldPrice: 1149.00, newPrice: 1199.00 },
+        createdAt: oneDayAgo,
+      },
+    }),
+
+    // MacBook Air on Best Buy - price drops
+    prisma.listingEvent.create({
+      data: {
+        listingId: listings[3].id,
+        trackerId: trackers[1].id,
+        eventType: 'PRICE_DROP',
+        metadata: { oldPrice: 1199.00, newPrice: 1149.00 },
+        createdAt: threeDaysAgo,
+      },
+    }),
+    prisma.listingEvent.create({
+      data: {
+        listingId: listings[3].id,
+        trackerId: trackers[1].id,
+        eventType: 'PRICE_DROP',
+        metadata: { oldPrice: 1149.00, newPrice: 1099.00 },
+        createdAt: oneDayAgo,
+      },
+    }),
+
+    // JavaScript book - price drops
+    prisma.listingEvent.create({
+      data: {
+        listingId: listings[4].id,
+        trackerId: trackers[2].id,
+        eventType: 'PRICE_DROP',
+        metadata: { oldPrice: 34.99, newPrice: 32.99 },
+        createdAt: threeDaysAgo,
+      },
+    }),
+    prisma.listingEvent.create({
+      data: {
+        listingId: listings[4].id,
+        trackerId: trackers[2].id,
+        eventType: 'PRICE_DROP',
+        metadata: { oldPrice: 32.99, newPrice: 29.99 },
+        createdAt: oneDayAgo,
+      },
+    }),
+
+    // Nike Air Max on Footlocker - out of stock
+    prisma.listingEvent.create({
+      data: {
+        listingId: listings[6].id,
+        trackerId: trackers[3].id,
+        eventType: 'OUT_OF_STOCK',
+        createdAt: oneDayAgo,
+      },
+    }),
+  ]);
+
+  console.log('✅ Created listing events');
+
   console.log('🎉 Seed completed successfully!');
   console.log(`Created:
   - ${users.length} users
   - ${tags.length} tags
   - ${trackers.length} trackers
   - ${listings.length} listings
-  - ${snapshots.length} listing snapshots`);
+  - ${snapshots.length} listing snapshots
+  - ${events.length} listing events`);
 }
 
 main()

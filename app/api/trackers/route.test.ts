@@ -2,24 +2,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { Prisma  } from '@/app/generated/prisma';
 import { GET } from './route';
-import { createMockTracker, createMockUser, createMockTrackers } from '@/app/utils/factories';
+import { createMockTracker, createMockTrackers } from '@/app/utils/factories';
 
 type TrackerDetails = Prisma.TrackerGetPayload<{
   include: {
-    user: true;
     tags: true;
-    listings: {
-      select: {
-        id: true;
-        title: true;
-        url: true;
-        domain: true;
-        currentPrice: true;
-        isAvailable: true;
-        lastCheckedAt: true;
+    listingEvents: {
+      include: {
+        listing: {
+          select: {
+            title: true;
+            url: true;
+          };
+        };
       };
-      orderBy: { lastCheckedAt: 'desc' };
-      take: 1;
     };
   };
 }> & { _count: { listings: number } };
@@ -51,13 +47,7 @@ describe('/api/trackers GET', () => {
   });
 
   it('should return trackers with default pagination', async () => {
-    const mockUser = createMockUser({
-      id: 1,
-      email: 'test@example.com',
-      createdAt: '2025-08-11T08:03:31.765Z',
-      updatedAt: '2025-08-11T08:03:31.765Z'
-    });
-    const mockTrackers = [
+    const mockTrackers: TrackerDetails[] = [
       {
         ...createMockTracker({
           id: 1,
@@ -68,11 +58,12 @@ describe('/api/trackers GET', () => {
           createdAt: '2025-08-11T08:03:31.765Z',
           updatedAt: '2025-08-11T08:03:31.765Z'
         }),
-        user: mockUser,
+        lowestAvailablePrice: null,
+        isArchived: false,
         tags: [],
-        listings: [],
+        listingEvents: [],
         _count: { listings: 0 }
-      }
+      } as any
     ];
     const mockTotal = 1;
 
@@ -88,7 +79,7 @@ describe('/api/trackers GET', () => {
     expect(data.pagination.limit).toBe(10);
     expect(data.pagination.offset).toBe(0);
     expect(data.pagination.hasMore).toBe(false);
-    expect(getTrackers).toHaveBeenCalledWith({ tagNames: [], sort: 'createdAt', order: 'desc', limit: 10, offset: 0, isArchived: false });
+    expect(getTrackers).toHaveBeenCalledWith({ tagNames: [], sort: 'createdAt', order: 'desc', limit: 10, offset: 0, isArchived: false, userId: '1' });
   });
 
   it('should handle query parameters correctly', async () => {
@@ -100,7 +91,7 @@ describe('/api/trackers GET', () => {
     const response = await GET(request);
     const data = await response.json();
 
-    expect(getTrackers).toHaveBeenCalledWith({ tagNames: ['Electronics', 'Books'], sort: 'title', order: 'asc', limit: 5, offset: 10, isArchived: false });
+    expect(getTrackers).toHaveBeenCalledWith({ tagNames: ['Electronics', 'Books'], sort: 'title', order: 'asc', limit: 5, offset: 10, isArchived: false, userId: '1' });
     expect(data.pagination.total).toBe(25);
     expect(data.pagination.hasMore).toBe(true); // 10 + 5 < 25
   });
@@ -114,7 +105,7 @@ describe('/api/trackers GET', () => {
     const response = await GET(request);
     const data = await response.json();
 
-    expect(getTrackers).toHaveBeenCalledWith({ tagNames: ['Electronics'], sort: 'createdAt', order: 'desc', limit: 10, offset: 0, isArchived: false });
+    expect(getTrackers).toHaveBeenCalledWith({ tagNames: ['Electronics'], sort: 'createdAt', order: 'desc', limit: 10, offset: 0, isArchived: false, userId: '1' });
     expect(data.pagination.total).toBe(0);
     expect(data.pagination.hasMore).toBe(false);
   });
@@ -131,20 +122,15 @@ describe('/api/trackers GET', () => {
   });
 
   it('should calculate hasMore correctly', async () => {
-    const mockUser = createMockUser({
-      id: 1,
-      email: 'test@example.com',
-      createdAt: '2025-08-11T08:03:31.765Z',
-      updatedAt: '2025-08-11T08:03:31.765Z'
-    });
     const baseTrackers = createMockTrackers(5, { id: 1, title: 'Test Tracker', userId: 1 });
     const mockTrackers: TrackerDetails[] = baseTrackers.map(tracker => ({
       ...tracker,
-      user: mockUser,
+      lowestAvailablePrice: null,
+      isArchived: false,
       tags: [],
-      listings: [],
+      listingEvents: [],
       _count: { listings: 0 }
-    }));
+    })) as any;
     const mockTotal = 20; // Total items in database
 
     mockedGetTrackers.mockResolvedValue({ trackers: mockTrackers, total: mockTotal });
@@ -157,6 +143,6 @@ describe('/api/trackers GET', () => {
     expect(data.pagination.total).toBe(20);
     expect(data.pagination.limit).toBe(5);
     expect(data.pagination.offset).toBe(10);
-    expect(getTrackers).toHaveBeenCalledWith({ tagNames: [], sort: 'createdAt', order: 'desc', limit: 5, offset: 10, isArchived: false });
+    expect(getTrackers).toHaveBeenCalledWith({ tagNames: [], sort: 'createdAt', order: 'desc', limit: 5, offset: 10, isArchived: false, userId: '1' });
   });
 });

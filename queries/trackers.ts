@@ -22,6 +22,7 @@ export async function getTrackerById(trackerId: number) {
 }
 
 type GetTrackersParams = {
+  userId: string;
   tagNames: string[];
   sort: string;
   order: 'asc' | 'desc';
@@ -30,8 +31,9 @@ type GetTrackersParams = {
   isArchived?: boolean;
 };
 
-export async function getTrackers({ tagNames, sort, order, limit, offset, isArchived = false }: GetTrackersParams) {
+export async function getTrackers({ userId, tagNames, sort, order, limit, offset, isArchived = false }: GetTrackersParams) {
   const where: any = {
+    userId: parseInt(userId),
     isArchived
   };
 
@@ -55,10 +57,22 @@ export async function getTrackers({ tagNames, sort, order, limit, offset, isArch
     include: {
       tags: true,
       listingEvents: {
+        where: {
+          createdAt: {
+            gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+          }
+        },
         orderBy: {
           createdAt: 'desc' as const
         },
-        take: 5,
+        include: {
+          listing: {
+            select: {
+              title: true,
+              url: true
+            }
+          }
+        }
       },
       _count: {
         select: {

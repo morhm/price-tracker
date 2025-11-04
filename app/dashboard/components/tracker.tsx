@@ -12,6 +12,15 @@ interface TrackerProps {
     name: string;
     color: string;
   }>;
+  listingEvents: Array<{
+    id: number;
+    eventType: string;
+    createdAt: string;
+    listing: {
+      title: string;
+      url: string;
+    };
+  }>;
   count: {
     listings: number;
   };
@@ -30,6 +39,7 @@ export const Tracker = ({
   targetPrice,
   lowestAvailablePrice,
   tags,
+  listingEvents,
   count,
   updatedAt,
   showArchived,
@@ -38,6 +48,20 @@ export const Tracker = ({
   handleArchiveTracker,
   handleDeleteTracker
 }: TrackerProps) => {
+  // Count event types
+  const priceDropsCount = listingEvents.filter(e => e.eventType === 'PRICE_DROP').length;
+  const priceIncreasesCount = listingEvents.filter(e => e.eventType === 'PRICE_INCREASE').length;
+  const outOfStockCount = listingEvents.filter(e => e.eventType === 'OUT_OF_STOCK').length;
+  const backInStockCount = listingEvents.filter(e => e.eventType === 'BACK_IN_STOCK').length;
+
+  // Get unique listing IDs for each event type
+  const getUniqueListingCount = (eventType: string) => {
+    const listingIds = new Set(
+      listingEvents.filter(e => e.eventType === eventType).map(e => e.listing.title)
+    );
+    return listingIds.size;
+  };
+
   return (
     <Link
       href={`/tracker/${id}`}
@@ -121,6 +145,44 @@ export const Tracker = ({
           </div>
         )}
       </div>
+
+      {/* Recent Events */}
+      {listingEvents.length > 0 && (
+        <div className="mb-4 space-y-1">
+          {priceDropsCount > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 px-2 py-1 rounded">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+              </svg>
+              <span>{priceDropsCount} price {priceDropsCount === 1 ? 'drop' : 'drops'} in the past 24h</span>
+            </div>
+          )}
+          {priceIncreasesCount > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+              <span>{priceIncreasesCount} price {priceIncreasesCount === 1 ? 'increase' : 'increases'} in the past 24h</span>
+            </div>
+          )}
+          {outOfStockCount > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-red-700 bg-red-50 px-2 py-1 rounded">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span>Out of stock on {getUniqueListingCount('OUT_OF_STOCK')} {getUniqueListingCount('OUT_OF_STOCK') === 1 ? 'site' : 'sites'}</span>
+            </div>
+          )}
+          {backInStockCount > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Back in stock on {getUniqueListingCount('BACK_IN_STOCK')} {getUniqueListingCount('BACK_IN_STOCK') === 1 ? 'site' : 'sites'}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tags */}
       {tags.length > 0 && (

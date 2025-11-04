@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
+    
     const { searchParams } = new URL(request.url);
 
     const sort = searchParams.get('sort') || 'createdAt';
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const isArchived = searchParams.get('archived') === 'true';
     const tagNames = tags ? tags.split(',').map(tag => tag.trim()) : [];
 
-    const { trackers, total } = await getTrackers({ tagNames, sort, order, limit, offset, isArchived });
+    const { trackers, total } = await getTrackers({ userId: session.user.id, tagNames, sort, order, limit, offset, isArchived });
 
     return NextResponse.json({
       trackers,

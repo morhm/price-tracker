@@ -87,6 +87,7 @@ export const TrackersGrid = ({
                 targetPrice={tracker.targetPrice}
                 lowestAvailablePrice={tracker.lowestAvailablePrice}
                 tags={tracker.tags}
+                listingEvents={tracker.listingEvents}
                 count={tracker._count}
                 updatedAt={tracker.updatedAt}
                 showArchived={showArchived}

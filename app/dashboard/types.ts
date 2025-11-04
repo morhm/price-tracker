@@ -6,23 +6,19 @@ export interface TrackerData {
   lowestAvailablePrice?: number;
   createdAt: string;
   updatedAt: string;
-  user: {
-    id: number;
-    email: string;
-  };
   tags: Array<{
     id: number;
     name: string;
     color: string;
   }>;
-  listings: Array<{
+  listingEvents: Array<{
     id: number;
-    title: string;
-    url: string;
-    domain: string;
-    currentPrice: number;
-    isAvailable: boolean;
-    lastCheckedAt: string;
+    eventType: string;
+    createdAt: string;
+    listing: {
+      title: string;
+      url: string;
+    };
   }>;
   _count: {
     listings: number;

@@ -42,10 +42,16 @@ describe('Tracker Queries', () => {
       const mockUser2 = createMockUser({ email: 'user2@test.com' });
 
       user1 = await prisma.user.create({
-        data: { email: mockUser1.email }
+        data: { 
+          id: 1,
+          email: mockUser1.email
+        }
       });
       user2 = await prisma.user.create({
-        data: { email: mockUser2.email }
+        data: {
+          id: 2,
+          email: mockUser2.email
+        }
       });
       
       // Create tags using factory
@@ -53,11 +59,11 @@ describe('Tracker Queries', () => {
       const mockClothesTag = createMockTag({ name: 'Clothes', userId: user1.id });
 
       electronicsTag = await prisma.tag.create({
-        data: { name: mockElectronicsTag.name, userId: user1.id }
+        data: { name: mockElectronicsTag.name, userId: user1.id, color: '#3B82F6' }
       });
 
       clothesTag = await prisma.tag.create({
-        data: { name: mockClothesTag.name, userId: user1.id }
+        data: { name: mockClothesTag.name, userId: user1.id, color: '#EC4899' }
       });
       
       // Create trackers using factory
@@ -154,17 +160,18 @@ describe('Tracker Queries', () => {
     });
 
     it('should return trackers with pagination - no filters', async () => {
-      const result = await getTrackers({ tagNames: [], sort: 'createdAt', order: 'desc', limit: 10, offset: 0 });
-      
-      const expectedTotal = 3;
-      const expectedLength = 3;      
+      const result = await getTrackers({ userId: '1', tagNames: [], sort: 'createdAt', order: 'desc', limit: 10, offset: 0 });
+
+      // User 1 has 2 trackers (tracker1 and tracker2), user 2 has 1 (tracker3)
+      const expectedTotal = 2;
+      const expectedLength = 2;
 
       expect(result.trackers).toHaveLength(expectedLength);
       expect(result.total).toBe(expectedTotal);
     });
 
-    it('should filter trackers by tags', async () => {     
-      const result = await getTrackers({ tagNames: ['Electronics'], sort: 'createdAt', order: 'desc', limit: 10, offset: 0 });
+    it('should filter trackers by tags', async () => {
+      const result = await getTrackers({ userId: '1', tagNames: ['Electronics'], sort: 'createdAt', order: 'desc', limit: 10, offset: 0 });
 
       const expectedLength = 1;
       const expectedTotal = 1;
@@ -174,20 +181,20 @@ describe('Tracker Queries', () => {
     });
 
     it('should handle sorting', async () => {
-      const result = await getTrackers({ tagNames: [], sort: 'title', order: 'asc', limit: 10, offset: 0 });
-      
-      // Verify that we got 3 results and they're sorted
-      expect(result.trackers).toHaveLength(3);
+      const result = await getTrackers({ userId: '1', tagNames: [], sort: 'title', order: 'asc', limit: 10, offset: 0 });
+
+      // Verify that we got 2 results (user1's trackers only) and they're sorted
+      expect(result.trackers).toHaveLength(2);
       const titles = result.trackers.map(t => t.title);
       const sortedTitles = [...titles].sort();
       expect(titles).toEqual(sortedTitles);
     });
 
     it('should handle pagination with offset and limit', async () => {
-      const result = await getTrackers({ tagNames: [], sort: 'title', order: 'asc', limit: 2, offset: 0 });
+      const result = await getTrackers({ userId: '1', tagNames: [], sort: 'title', order: 'asc', limit: 1, offset: 0 });
 
-      expect(result.trackers).toHaveLength(2);
-      expect(result.total).toBe(3);
+      expect(result.trackers).toHaveLength(1);
+      expect(result.total).toBe(2); // User 1 has 2 trackers total
     });
 
     describe('getTrackerById', () => {
@@ -199,16 +206,11 @@ describe('Tracker Queries', () => {
         expect(result?.title).toBe('iPhone Tracker');
         expect(result?.description).toBe('Track iPhone prices');
         expect(result?.targetPrice?.toString()).toBe('999');
-        
-        // Check user data
-        expect(result?.user).toBeDefined();
-        expect(result?.user.id).toBe(user1.id);
-        expect(result?.user.email).toBe('user1@test.com');
-        
+
         // Check tags
         expect(result?.tags).toHaveLength(1);
         expect(result?.tags[0].name).toBe('Electronics');
-        
+
         // Check listings
         expect(result?.listings).toHaveLength(1);
         expect(result?.listings[0].title).toBe('iPhone 15 Pro');
@@ -226,7 +228,6 @@ describe('Tracker Queries', () => {
         expect(result?.title).toBe('Generic Tracker');
         expect(result?.tags).toHaveLength(0);
         expect(result?.listings).toHaveLength(0);
-        expect(result?.user.id).toBe(user2.id);
       });
 
       it('should return tracker with no listings', async () => {
@@ -255,15 +256,15 @@ describe('Tracker Queries', () => {
 
   describe('edge cases', () => {
     it('should handle empty database', async () => {
-      const result = await getTrackers({ tagNames: [], sort: 'createdAt', order: 'desc', limit: 10, offset: 0 });
-      
+      const result = await getTrackers({ userId: '1', tagNames: [], sort: 'createdAt', order: 'desc', limit: 10, offset: 0 });
+
       expect(result.trackers).toHaveLength(0);
       expect(result.total).toBe(0);
     });
 
     it('should handle non-existent tags', async () => {
-      const result = await getTrackers({ tagNames: ['NonExistentTag'], sort: 'createdAt', order: 'desc', limit: 10, offset: 0 });
-      
+      const result = await getTrackers({ userId: '1', tagNames: ['NonExistentTag'], sort: 'createdAt', order: 'desc', limit: 10, offset: 0 });
+
       expect(result.trackers).toHaveLength(0);
       expect(result.total).toBe(0);
     });
