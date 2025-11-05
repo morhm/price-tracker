@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Listing, Tag } from '@/app/generated/prisma';
 import { TagInput, Tag as TagComponent  } from '@/components';
 import { useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/app/components';
 
 export default function TrackerPage() {
   const params = useParams();
@@ -325,12 +326,13 @@ export default function TrackerPage() {
             <h2 className="text-2xl font-semibold text-gray-900">
               Listings ({trackerData?.listings?.length || 0})
             </h2>
-            <button
+            <Button
               onClick={() => setShowAddListingModal(true)}
-              className="bg-white border-2 border-blue-500 hover:bg-gray-300 text-black px-6 py-2 rounded-md"
+              variant="primary"
+              size="md"
             >
               Add Listing
-            </button>
+            </Button>
           </div>
 
           <ListingsView
@@ -357,18 +359,20 @@ export default function TrackerPage() {
               {`Are you sure you want to delete the listing "${listingToDelete.title}"? This action cannot be undone.`}
             </p>
             <div className="flex justify-end space-x-2">
-              <button
+              <Button
                 onClick={cancelDeleteListing}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md"
+                variant="secondary"
+                size="md"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={confirmDeleteListing}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+                variant="danger"
+                size="md"
               >
                 Delete
-              </button>
+              </Button>
             </div>
           </div>
         </div>
