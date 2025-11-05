@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { TagFilter } from './tagFilter';
+import { Button } from '@/app/components';
 
 interface TabsProps {
   activeTab: string;
@@ -69,9 +70,11 @@ export const Tabs = ({
         <div className="flex flex-wrap justify-end gap-4 items-center">
           {/* Filter Button */}
           <div className="relative" ref={filterDropdownRef}>
-            <button
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-              className={`flex items-center gap-2 border px-4 py-2 rounded-md text-sm font-medium ${showFilterDropdown
+              className={`flex gap-2 px-4 py-2 font-size-sm ${showFilterDropdown
                 ? 'bg-gray-100 border-gray-400 text-gray-900'
                 : 'bg-white border-gray-300 hover:bg-gray-50 text-gray-700'
                 }`}
@@ -85,7 +88,7 @@ export const Tabs = ({
                   {selectedTags.length}
                 </span>
               )}
-            </button>
+            </Button>
             {showFilterDropdown && (
               <div className="absolute right-0 mt-2 w-96 bg-white border border-gray-300 rounded-md shadow-lg z-20">
                 <div className="p-4">
@@ -106,13 +109,14 @@ export const Tabs = ({
                     clearTags={clearTags}
                     toggleTag={toggleTag}
                   />
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <button
+                  <div className="flex justify-end mt-4 pt-4 border-t border-gray-200">
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setShowFilterDropdown(false)}
-                      className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
                     >
                       Done
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -120,12 +124,13 @@ export const Tabs = ({
           </div>
 
           {/* Add Tracker Button */}
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+          <Button
+            variant="primary"
+            size="md"
             onClick={onAddTracker}
           >
             Add Tracker
-          </button>
+          </Button>
         </div>
       </div>
     </div>

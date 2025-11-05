@@ -2,6 +2,7 @@ import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 import { TagInput, useToast } from "@/components";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/app/components';
 
 type FormData = {
   title: string;
@@ -180,20 +181,20 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
         </div>
 
         <div className="flex justify-end space-x-2">
-          <button
-            type="button"
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md"
+          <Button
+            variant="secondary"
+            size="md"
             onClick={() => handleCloseModal()}
           >
             Cancel
-          </button>
-          <button
-            type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
             disabled={createTrackerMutation.isPending}
           >
             {createTrackerMutation.isPending ? 'Creating...' : 'Create'}
-          </button>
+          </Button>
         </div>
         </form>
       </div>

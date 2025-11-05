@@ -8,6 +8,7 @@ import { useTagFilter } from './hooks/useTagFilter';
 import { Tabs } from './components/tabs';
 import { TrackersGrid } from './components/trackersGrid';
 import { TrackerData } from './types';
+import { Button } from '@/app/components';
 
 // Types
 
@@ -198,12 +199,12 @@ export default function Dashboard() {
                 Manage and monitor your price trackers
               </p>
             </div>
-            <button
+            <Button
               onClick={() => signOut()}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-            >
+              size="sm"
+              variant="secondary">
               Logout
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -234,13 +235,15 @@ export default function Dashboard() {
         {/* Error State */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-800">Error: {error.message}</p>
-            <button 
+            <p className="text-red-800">Error: bloop</p>
+            <Button
               onClick={() => fetchTrackers()}
-              className="mt-2 text-red-600 hover:text-red-800 text-sm underline"
+              size="md"
+              variant="outline"
+              className="mt-4"
             >
               Try again
-            </button>
+            </Button>
           </div>
         )}
 
@@ -257,18 +260,20 @@ export default function Dashboard() {
                 {`Are you sure you want to delete the tracker \"${trackerToDelete.title}\"? This action cannot be undone.`}
               </p>
               <div className="flex justify-end space-x-2">
-                <button
-                  onClick={cancelDeleteTracker}
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md"
+                <Button
+                  onClick={() => setDeleteModalOpen(false)}
+                  variant="secondary"
+                  size="md"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="danger"
+                  size="md"
                   onClick={confirmDeleteTracker}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
                 >
                   Delete
-                </button>
+                </Button>
               </div>
             </div>
           </div>
