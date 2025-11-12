@@ -2,7 +2,6 @@ import type { Listing } from '@/app/generated/prisma';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
-import { format } from 'path';
 
 interface ListingsViewProps {
   listings: Listing[];
@@ -172,14 +171,41 @@ export default function ListingsView({ listings, onDeleteListing }: ListingsView
           >
             {detailsListingId === listing.id && data && (
               <div className="border-t border-gray-200 mt-4 pt-4 w-full">
-                <div className="text-sm text-gray-500 mb-2">Price History (Last 7 Days)</div>
-                <div className="h-full mt-4 h-24 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
-                  <LineChart width={600} height={300} data={data}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="createdAt" tickFormatter={formatDate} padding={{ left: 20, right: 20 }} />
-                    <YAxis />
-                    <Tooltip formatter={(value) => `$${value}`} />
-                    <Line type="monotone" dataKey="price" stroke="#8884d8" dot={false} />
+                <div className="text-sm font-medium text-gray-700 mb-2">Price History</div>
+                <div className="h-full mt-4 bg-white rounded-lg flex items-center justify-center">
+                  <LineChart width={600} height={300} data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="createdAt"
+                      tickFormatter={formatDate}
+                      padding={{ left: 20, right: 20 }}
+                      stroke="#6b7280"
+                      style={{ fontSize: '12px' }}
+                    />
+                    <YAxis
+                      domain={[(dataMin: number) => Math.floor(dataMin * 0.95), (dataMax: number) => Math.ceil(dataMax * 1.05)]}
+                      tickFormatter={(value) => `$${value}`}
+                      stroke="#6b7280"
+                      style={{ fontSize: '12px' }}
+                    />
+                    <Tooltip
+                      formatter={(value: any) => [`$${parseFloat(value).toFixed(2)}`, 'Price']}
+                      labelFormatter={(label) => `Date: ${formatDate(label)}`}
+                      contentStyle={{
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        padding: '8px 12px'
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="price"
+                      stroke="#3b82f6"
+                      strokeWidth={2}
+                      dot={{ fill: '#3b82f6', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
                   </LineChart>
                 </div>
               </div>
