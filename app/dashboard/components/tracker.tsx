@@ -65,7 +65,7 @@ export const Tracker = ({
   return (
     <Link
       href={`/tracker/${id}`}
-      className={`rounded-lg shadow hover:shadow-lg transition-all p-6 group cursor-pointer ${showArchived ? 'bg-gray-100 border border-gray-300' : 'bg-white'
+      className={`relative rounded-lg shadow hover:shadow-lg transition-all p-6 group cursor-pointer ${showArchived ? 'bg-gray-100 border border-gray-300' : 'bg-white'
         }`}
     >
       <div className="flex justify-between items-start mb-4">
@@ -205,7 +205,7 @@ export const Tracker = ({
       )}
 
       {/* Timestamp */}
-      <p className="text-xs text-gray-400 mt-3">
+      <p className="text-xs text-gray-400 mt-3 absolute bottom-2">
         Updated {new Date(updatedAt).toLocaleDateString()}
       </p>
     </Link>

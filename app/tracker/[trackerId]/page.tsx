@@ -290,14 +290,14 @@ export default function TrackerPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Target Price</label>
                 {isEditing ? (
-                  <div className="space-y-2">
+                  <div className="space-y-2 p-3">
                     <div className="flex items-center gap-1">
-                      <span className="text-2xl font-bold text-gray-600">$</span>
+                      <span className="text-xl font-bold text-gray-600">$</span>
                       <input
                         type="number"
                         value={editedTargetPrice}
                         onChange={(e) => setEditedTargetPrice(e.target.value)}
-                        className="text-2xl font-bold text-green-600 bg-transparent border-b-2 border-green-500 focus:outline-none focus:border-green-600 w-32"
+                        className="text-2xl font-bold bg-transparent border-b-2 border-green-500 focus:outline-none focus:border-green-600 w-32"
                         placeholder="0.00"
                         step="0.01"
                         min="0"
@@ -306,7 +306,7 @@ export default function TrackerPage() {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-xl font-bold p-3">
                     {trackerData?.targetPrice ? `$${trackerData.targetPrice}` : 'Not set'}
                   </p>
                 )}
