@@ -52,6 +52,7 @@ model Tracker {
   userId               Int
   title                String
   description          String?
+  shoppingSuggestion   String?
   targetPrice          Decimal?
   lowestAvailablePrice Decimal?
   isArchived           Boolean        @default(false)

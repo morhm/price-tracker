@@ -104,13 +104,13 @@ export default function CreateTrackerModal({ handleCloseModal }: CreateTrackerMo
 
   // AI tracker creation mutation
   const createTrackerWithAIMutation = useMutation({
-    mutationFn: async (prompt: string) => {
-      const response = await fetch('/api/assistant', {
+    mutationFn: async (query: string) => {
+      const response = await fetch('/api/assistant/create-tracker', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ query }),
       });
 
       if (!response.ok) {

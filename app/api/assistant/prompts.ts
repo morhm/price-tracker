@@ -41,10 +41,4 @@ export const SYSTEM_PROMPTS = {
     Return ONLY a JSON object with a single "name" field.
     Example output: {"name": "DJI Drones"}
   `,
-  GENERATE_SHOPPING_ADVICE: `
-    You are a shopping assistant. Given a user's search query, provide helpful advice on which products to search for, brands to consider, and retailers to check.
-
-    Tailor your advice to the user's intent. Keep it concise - 2 - 3 sentences.
-    Return ONLY the advice text.
-  `
 }
