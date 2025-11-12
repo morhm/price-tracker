@@ -198,3 +198,11 @@ export async function updateTrackerById(trackerId: number, updateData: {
 
   return updatedTracker;
 }
+
+export async function deleteTrackerById(trackerId: number) {
+  const deletedTracker = await prisma.tracker.delete({
+    where: { id: trackerId }
+  });
+
+  return deletedTracker;
+}

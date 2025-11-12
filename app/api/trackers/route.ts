@@ -3,8 +3,13 @@ import { getServerSession } from 'next-auth';
 import { getTrackers, createNewTracker } from '@/queries/trackers';
 import { authOptions } from '@/lib/auth';
 import { ensureTagsExist } from '@/queries/tags';
+import { getRedisClient } from '@/lib/redis';
 
 export async function GET(request: NextRequest) {
+  const redis = getRedisClient();
+  const morhm = await redis.get('morhm');
+  console.log('bloop morhm:', morhm);
+
   try {
     const session = await getServerSession(authOptions);
 

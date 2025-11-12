@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { getTrackerById, updateTrackerById } from '@/queries/trackers';
+import { getTrackerById, updateTrackerById, deleteTrackerById } from '@/queries/trackers';
 import { authOptions } from '@/lib/auth';
 import { ensureTagsExist } from '@/queries/tags';
 
@@ -68,6 +68,41 @@ export async function PATCH(request: NextRequest, context: RouteContext<'/api/tr
     return NextResponse.json(updatedTracker, { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('Error updating tracker data:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext<'/api/trackers/[trackerId]'>) {
+  try {
+    const { trackerId: paramTrackerId } = await context.params;
+    const trackerId = parseInt(paramTrackerId, 10);
+
+    if (trackerId !== 0 && !trackerId) {
+      return new NextResponse(JSON.stringify({ error: 'Tracker ID is required' }), { status: 400 });
+    }
+
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Verify tracker exists and belongs to user
+    const tracker = await getTrackerById(trackerId);
+
+    if (!tracker) {
+      return NextResponse.json({ error: 'Tracker not found' }, { status: 404 });
+    }
+
+    if (tracker.userId !== parseInt(session.user.id, 10)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    await deleteTrackerById(trackerId);
+
+    return NextResponse.json({ message: 'Tracker deleted successfully' }, { status: 200 });
+  } catch (error) {
+    console.error('Error deleting tracker:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

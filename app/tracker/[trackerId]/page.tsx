@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import LoadingTrackerPage from './loading';
 import AddListingModal from '../addListingModal';
 import ListingsView from '../components/listingsView';
@@ -13,6 +13,7 @@ import { Button } from '@/app/components';
 
 export default function TrackerPage() {
   const params = useParams();
+  const router = useRouter();
   const trackerId = params.trackerId as string;
 
   const [showAddListingModal, setShowAddListingModal] = useState<boolean>(false);
@@ -23,6 +24,7 @@ export default function TrackerPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
+  const [deleteTrackerModalOpen, setDeleteTrackerModalOpen] = useState<boolean>(false);
   const queryClient = useQueryClient();
 
   const {
@@ -163,6 +165,27 @@ export default function TrackerPage() {
     setListingToDelete(null);
   };
 
+  const confirmDeleteTracker = async () => {
+    try {
+      const response = await fetch(`/api/trackers/${trackerId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ['trackers'], exact: false });
+        router.push('/dashboard');
+      } else {
+        console.error('Failed to delete tracker');
+      }
+    } catch (error) {
+      console.error('Error deleting tracker:', error);
+    }
+  };
+
+  const cancelDeleteTracker = () => {
+    setDeleteTrackerModalOpen(false);
+  };
+
   if (loading) {
     return <LoadingTrackerPage />;
   }
@@ -292,7 +315,7 @@ export default function TrackerPage() {
           </div>
 
           {/* Tags Section */}
-          <div>
+          <div className="mb-8">
               <h2 className="text-xl font-semibold text-gray-900">Tags</h2>
             {isEditing ? (
               <div className="space-y-3">
@@ -317,6 +340,21 @@ export default function TrackerPage() {
                 )}
               </div>
             )}
+          </div>
+
+          {/* Delete Tracker Section */}
+          <div className="border-t pt-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Danger Zone</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Deleting this tracker will permanently remove it and all associated listings.
+            </p>
+            <Button
+              onClick={() => setDeleteTrackerModalOpen(true)}
+              variant="danger"
+              size="md"
+            >
+              Delete Tracker
+            </Button>
           </div>
         </div>
 
@@ -372,6 +410,34 @@ export default function TrackerPage() {
                 size="md"
               >
                 Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Tracker Modal */}
+      {deleteTrackerModalOpen && (
+        <div className="fixed inset-0 bg-black/10 backdrop-blur-[2px] flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md border border-gray-300">
+            <h2 className="text-xl font-bold mb-4">Confirm Delete Tracker</h2>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete the tracker "{trackerData?.title}"? This will permanently remove the tracker and all {trackerData?.listings?.length || 0} associated listing(s). This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-2">
+              <Button
+                onClick={cancelDeleteTracker}
+                variant="secondary"
+                size="md"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDeleteTracker}
+                variant="danger"
+                size="md"
+              >
+                Delete Tracker
               </Button>
             </div>
           </div>

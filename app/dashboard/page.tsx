@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import CreateTrackerModal from './createTracker/createTrackerModal';
+import CreateTrackerLLMModal from './createTracker/createTrackerLLMModal';
 import { useSession, signOut } from 'next-auth/react';
 import { useTagFilter } from './hooks/useTagFilter';
 import { Tabs } from './components/tabs';
@@ -249,7 +250,7 @@ export default function Dashboard() {
 
         {/* Modals */}
         {!loading && !error && isCreateModalOpen && (
-          <CreateTrackerModal handleCloseModal={() => setIsCreateModalOpen(false)} />
+          <CreateTrackerLLMModal handleCloseModal={() => setIsCreateModalOpen(false)} />
         )}
 
         {!loading && !error && deleteModalOpen && trackerToDelete && (
