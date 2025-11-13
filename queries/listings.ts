@@ -12,11 +12,20 @@ interface NewListingData {
 }
 
 export async function createNewListing(listingData: NewListingData): Promise<Listing> {
+  const price = listingData.currentPrice ?? 0;
+
   const newListing = await prisma.listing.create({
     data: {
       ...listingData,
-      currentPrice: listingData.currentPrice ?? 0,
-      title: listingData.title || 'Untitled Listing'
+      currentPrice: price,
+      title: listingData.title || 'Untitled Listing',
+      history: {
+        create: {
+          price: price,
+          isAvailable: listingData.isAvailable,
+          source: listingData.domain,
+        }
+      }
     }
   });
   return newListing;

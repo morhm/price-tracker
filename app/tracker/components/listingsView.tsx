@@ -44,7 +44,21 @@ export default function ListingsView({ listings, onDeleteListing }: ListingsView
           throw new Error('Failed to fetch listing snapshots');
         }
         const data = await response.json();
-        return data.listingSnapshots;
+        const snapshots = data.listingSnapshots;
+
+        // Group snapshots by date and keep only the latest one per day
+        const snapshotsByDate = snapshots.reduce((acc: any, snapshot: any) => {
+          const date = new Date(snapshot.createdAt).toDateString();
+          if (!acc[date] || new Date(snapshot.createdAt) > new Date(acc[date].createdAt)) {
+            acc[date] = snapshot;
+          }
+          return acc;
+        }, {});
+
+        // Convert back to array and sort by date
+        return Object.values(snapshotsByDate).sort((a: any, b: any) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
       } catch (error) {
         console.error('Error fetching listing snapshots:', error);
         return [];
